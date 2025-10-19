@@ -60,15 +60,14 @@ The server supports battles, for those a patched client is neccessary.
   - [UwAmp (includes phpMyAdmin & MySQL)](https://www.uwamp.com/en/?page=download)
 
 ```
-If you're on Windows, the ClashRoyale folder has bat files to run the server.
+If you're on Windows, the ClashRoyale folder has bat files to run the server or you can use the commands below.
 If you're on Linux run the commands below.
 ```
 
 ###### Main Server:
 ```
 cd /where/your/directory/you/put/ClashRoyale
-dotnet publish "ClashRoyale.csproj" -c Release -o app
-cp filter.json app/
+dotnet publish \"ClashRoyale.csproj\" -c Release -o app && copy /Y filter.json app\
 ```
 
 #### Run the server:
