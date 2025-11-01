@@ -135,27 +135,6 @@ namespace ClashRoyale.Protocol.Messages.Client.Login
 
                 player.Home.TotalSessions++;
 
-                await new LoginOkMessage(Device).SendAsync();
-                await new OwnHomeDataMessage(Device).SendAsync();
-                await new AvatarStreamMessage(Device)
-                {
-                    Entries = player.Home.Stream
-                }.SendAsync();
-
-                if (!player.Home.AllianceInfo.HasAlliance) return;
-
-                var alliance = await Resources.Alliances.GetAllianceAsync(player.Home.AllianceInfo.Id);
-                if (alliance == null) return;
-
-                Resources.Alliances.Add(alliance);
-
-                await new AllianceStreamMessage(Device)
-                {
-                    Entries = alliance.Stream
-                }.SendAsync();
-
-                alliance.UpdateOnlineCount();
-
                 if (Device.Session.GameVersion != SERVER_VERSION_NUMBER)
                 {
                     await new LoginFailedMessage(Device)
@@ -180,6 +159,27 @@ namespace ClashRoyale.Protocol.Messages.Client.Login
                         return;
                     }
                 }
+
+                await new LoginOkMessage(Device).SendAsync();
+                await new OwnHomeDataMessage(Device).SendAsync();
+                await new AvatarStreamMessage(Device)
+                {
+                    Entries = player.Home.Stream
+                }.SendAsync();
+
+                if (!player.Home.AllianceInfo.HasAlliance) return;
+
+                var alliance = await Resources.Alliances.GetAllianceAsync(player.Home.AllianceInfo.Id);
+                if (alliance == null) return;
+
+                Resources.Alliances.Add(alliance);
+
+                await new AllianceStreamMessage(Device)
+                {
+                    Entries = alliance.Stream
+                }.SendAsync();
+
+                alliance.UpdateOnlineCount();
 
                 var i = (long)Device.Player.Home.Arena.Trophies;
                 if (i < 400)
