@@ -180,7 +180,6 @@ namespace ClashRoyale.Protocol.Messages.Client.Login
                 }
                 else
                 {
-                    player = await Resources.Players.Login(UserId, UserToken);
                 }
             }
             catch (Exception ex)
