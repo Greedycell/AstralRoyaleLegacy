@@ -1,59 +1,57 @@
 # <p align="center">AstralRoyale</p>
-# <p align="center">Clash Royale server for 1.9.0 - 1.9.2</p>
-[![clash royale](https://img.shields.io/badge/Clash%20Royale-1.9.2-brightred.svg?style=flat")](https://clash-royale.en.uptodown.com/android/download/1632865)
+# <p align="center">Clash Royale server for 1.9.0 - 1.9.3</p>
+[![clash royale](https://img.shields.io/badge/Clash%20Royale-1.9-brightred.svg?style=flat")](https://github.com/Greedycell/AstralRoyale/releases/tag/Clients)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-![Build Status](https://action-badges.now.sh/retroroyale/ClashRoyale)
 
-#### A .NET Core 2017 Clash Royale Server (v1.9.0 - v1.9.2)
-##### Need help? Join our [Discord](https://discord.gg/mUredE6CTU)
+#### A .NET Core 2017 Clash Royale Server (v1.9.0 - v1.9.3)
+##### Need help? Join our [Discord](https://discord.gg/mUredE6CTU) or [Subreddit](https://www.reddit.com/r/astralcell)
 #### Want to help us? Fork this project and you could try add stuff!
 
-#### SERVER DOWNLOAD: https://github.com/fdz6/AstralRoyale/releases/tag/Server
-#### CLIENTS DOWNLOAD: https://github.com/fdz6/AstralRoyale/releases/tag/Clients
-#### PORT FORWARD APP DOWNLOAD: https://github.com/fdz6/AstralRoyale/releases/tag/PortForward
+#### SERVER DOWNLOAD: https://github.com/Greedycell/AstralRoyale/releases/tag/Server
+#### CLIENTS DOWNLOAD: https://github.com/Greedycell/AstralRoyale/releases/tag/Clients
+#### PORT FORWARD APP DOWNLOAD: https://github.com/Greedycell/AstralRoyale/releases/tag/PortForward
 
-## Update Logs (9/5/2025 - 8:19 PM):
-```
-1. Final fix to the profile arena.
-2. Implemented a feature where if you have an outdated server version then you will be warned about having an outdated server which allows you to update it.
-3. Fixed some bugs.
-4. Invite Friends, Cancel Tournament Matchmake, Claim Achievements structure systems (not completed). 
-```
+## [Changelogs (click to view)](https://raw.githubusercontent.com/astralsc/AstralRoyale/refs/heads/master/repo_changelogs)
 
 ## Features
 ```
-1. More commands.
-2. Searchable clans.
-3. Maintenance system. (only enabled/disabled with the built in clan commands or the config.json file)
+1. More commands
+2. Searchable clans
+3. Maintenance system.
 4. Clan Commands (including non admin/admin commands + added /admin & /ban command)
-5. Update check if the app's version is incorrect.
-6. Extended the 2v2 button timestamp to 2038, I did this so you can see the 2v2 button)
-7. Username, clan name/description/chat filtering system.
+5. Update check if the app's version is incorrect
+6. Extended the 2v2 button timestamp to 2038 (I did this so you can see the 2v2 button)
+7. Username, clan name/description/chat filtering system
 8. Battle System
 9. Friendly Battle
 10. Shop
 11. Upgrading
-12. Arena map fixes.
+12. Arena map fixes
+13. Gem Packs (complete but all of them only give 1000 gems for now)
+14. 2v2 round results working
+15. Donations (donations send but you can't donate to the donation requester)
+16. Sending Clan Mail
+17. Friends system (for now you can't accept the requests from a link will come soon)
 ```
 
 ## Partial Features
 ```
-1. Sending Clan Mail
-2. Achievements
+1. Achievements
 ```
 
 ## Incomplete Features
 ```
-1. Classic Challenge & Grand Challenge
-2. Reporting Users
-3. Buying cards with gems
-4. Battle Logs
+1. Reporting Users
+2. Buying cards from the shop with gems
+3. Battle Logs
+4. Battle End Results
+5. Chest Slots
 ```
 
 ## Battles
 The server supports battles, for those a patched client is neccessary.
 
-[See the wiki for a tutorials](https://github.com/fdz6/AstralRoyale/wiki/)
+[See the wiki for a tutorials](https://github.com/Greedycell/AstralRoyale/wiki/)
 
 ## How to start
 
@@ -62,14 +60,14 @@ The server supports battles, for those a patched client is neccessary.
   - [UwAmp (includes phpMyAdmin & MySQL)](https://www.uwamp.com/en/?page=download)
 
 ```
-If you're on Windows, the ClashRoyale folder has bat files to run the server.
+If you're on Windows, the ClashRoyale folder has bat files to run the server or you can use the commands below.
 If you're on Linux run the commands below.
 ```
 
 ###### Main Server:
 ```
 cd /where/your/directory/you/put/ClashRoyale
-dotnet publish "ClashRoyale.csproj" -c Release -o app
+dotnet publish \"ClashRoyale.csproj\" -c Release -o app && copy /Y filter.json app\
 ```
 
 #### Run the server:
@@ -91,9 +89,10 @@ Change MinTrophies to 15 and change MaxTrophies to 50. You can change it to what
 Change DefaultGold, DefaultGems to any value but I recommend setting it to "100000000" if you want to progress faster.
 Change DefaultLevel, PLEASE CHANGE THIS VALUE TO 1 - 13. DO NOT HAVE "DefaultLevel" SET TO 0 OR ELSE IT CRASHES THE CR APP.
 Optional Step: You can change update_url to the download page of your website.
+Important Note: If the default values randomly reset, you should edit the Default values in ClashRoyale\Core\Configuration.cs and set those values to what you want and run publish.bat to publish all changes.
 
 NOTE: THE APK & IPA STEPS ARE IN THE WIKI PAGE!
 ```
 
 ## Need help?
-Contact me on Discord (fusiondevz) or open an issue.
+Ask for help in my [Discord server](https://discord.gg/mUredE6CTU) or open an issue.

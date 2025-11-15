@@ -1,0 +1,17 @@
+v1.9.2-4 (10/10/2025) - Latest:
+1. Alot of features that can't be explained.
+------------------------------
+v1.9.2-3 (9/30/2025):
+1. Added tournaments (logic complete but very unstable).
+2. Added gem packs (logic complete but it only gives 1000 gems for now).
+3. 2v2 round results menu now shows.
+------------------------------
+v1.9.2-2 (9/15/2025):
+1. Hopefully added a DDOS protection.
+2. Updated the new update check system to have a reason.
+------------------------------
+1.9.2-1  (9/5/2025):
+1. Final fix to the profile arena.
+2. Implemented a feature where if you have an outdated server version then you will be warned about having an outdated server which allows you to update it.
+3. Fixed some bugs.
+4. Invite Friends, Cancel Tournament Matchmake, Claim Achievements structure systems (not completed). 
