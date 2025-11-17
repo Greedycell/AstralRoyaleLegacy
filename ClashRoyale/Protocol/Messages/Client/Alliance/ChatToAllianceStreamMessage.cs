@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using ClashRoyale;
@@ -34,7 +34,6 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
             {
                 Message = message
             };
-
             entry.SetSender(Device.Player);
 
             alliance.AddEntry(entry);
