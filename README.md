@@ -67,7 +67,7 @@ If you're on Linux run the commands below.
 ###### Main Server:
 ```
 cd /where/your/directory/you/put/ClashRoyale
-dotnet publish \"ClashRoyale.csproj\" -c Release -o app && copy /Y filter.json app\
+dotnet publish "ClashRoyale.csproj" -c Release -o app && cp -f filter.json app/
 ```
 
 #### Run the server:
