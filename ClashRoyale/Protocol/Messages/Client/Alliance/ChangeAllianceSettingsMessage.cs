@@ -78,6 +78,14 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
         public override async void Process()
         {
             var home = Device.Player.Home;
+
+            // Protection if your not Co-Leader or Leader
+            // Leader = 2, Co-Leader = 4
+            if (home.AllianceInfo.Role != 4 && home.AllianceInfo.Role != 2)
+            {
+                return;
+            }
+
             var alliance = await Resources.Alliances.GetAllianceAsync(home.AllianceInfo.Id);
             if (alliance == null) return;
 

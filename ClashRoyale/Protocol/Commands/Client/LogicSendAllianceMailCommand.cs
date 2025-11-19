@@ -42,6 +42,14 @@ namespace ClashRoyale.Protocol
         private async Task ProcessAsync()
         {
             var player = Device.Player;
+            
+            // Protection if your not Co-Leader or Leader
+            // Leader = 2, Co-Leader = 4
+            if (player.Home.AllianceInfo.Role != 4 && player.Home.AllianceInfo.Role != 2)
+            {
+                return;
+            }
+
             var allianceInfo = player.Home?.AllianceInfo;
             if (allianceInfo == null)
             {

@@ -67,7 +67,7 @@ If you're on Linux run the commands below.
 ###### Main Server:
 ```
 cd /where/your/directory/you/put/ClashRoyale
-dotnet publish \"ClashRoyale.csproj\" -c Release -o app && copy /Y filter.json app\
+dotnet publish "ClashRoyale.csproj" -c Release -o app && cp -f filter.json app/
 ```
 
 #### Run the server:
@@ -91,7 +91,8 @@ Change DefaultLevel, PLEASE CHANGE THIS VALUE TO 1 - 13. DO NOT HAVE "DefaultLev
 Optional Step: You can change update_url to the download page of your website.
 Important Note: If the default values randomly reset, you should edit the Default values in ClashRoyale\Core\Configuration.cs and set those values to what you want and run publish.bat to publish all changes.
 
-NOTE: THE APK & IPA STEPS ARE IN THE WIKI PAGE!
+NOTE: THE APK & IPA STEPS ARE IN THE WIKI PAGE!dotnet publish \"ClashRoyale.csproj\" -c Release -o app && copy /Y filter.json app\
+
 ```
 
 ## Need help?
