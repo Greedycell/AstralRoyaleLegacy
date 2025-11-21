@@ -1,4 +1,4 @@
-﻿using ClashRoyale.Logic;
+using ClashRoyale.Logic;
 using ClashRoyale.Logic.Clan;
 using ClashRoyale.Logic.Clan.StreamEntry.Entries;
 using ClashRoyale.Protocol.Commands.Server;
@@ -29,6 +29,12 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
 
             // Check if player has enough trophies to join
             if (home.Arena.Trophies < alliance.RequiredScore)
+            {
+                await new AllianceJoinFailedMessage(Device).SendAsync();
+                return;
+            }
+
+            if (alliance.Type != 1) // 1 = Open, 2 = InviteOnly, 3 = Closed
             {
                 await new AllianceJoinFailedMessage(Device).SendAsync();
                 return;
