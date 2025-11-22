@@ -26,12 +26,12 @@ namespace ClashRoyale
         {
             Console.Clear();
 
-            Console.Title = $"AstralRoyale: V{ClashRoyale.Core.Configuration.Version} (by: @astralsc on GitHub)";
+            Console.Title = $"AstralRoyale: V{ClashRoyale.Core.Configuration.Version} (by: @Greedycell on GitHub)";
             Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-            string remoteUrl = "https://raw.githubusercontent.com/astralsc/AstralRoyale/refs/heads/master/project_update_check";
-            string remotereasonUrl = "https://raw.githubusercontent.com/astralsc/AstralRoyale/refs/heads/master/project_update_reason_check";
-            string ProjectPage = "https://github.com/astralsc/AstralRoyale/releases/tag/Server";
+            string remoteUrl = "https://raw.githubusercontent.com/Greedycell/AstralRoyaleLegacy/refs/heads/master/project_update_check";
+            string remotereasonUrl = "https://raw.githubusercontent.com/Greedycell/AstralRoyaleLegacy/refs/heads/master/project_update_reason_check";
+            string ProjectPage = "https://github.com/Greedycell/AstralRoyaleLegacy";
 
             try
             {
@@ -96,7 +96,7 @@ namespace ClashRoyale
                 " / ___ \\\\__ \\ |_| | | (_| | |  _ < (_) | |_| | (_| | |  __/\n" +
                 "/_/   \\_\\___/\\__|_|  \\__,_|_|_| \\_\\___/ \\__, |\\__,_|_|\\___|\n" +
                 "                                        |___/                 ");
-            Console.WriteLine("RetroRoyale fork by @astralsc");
+            Console.WriteLine("RetroRoyale fork by @Greedycell");
 
             Resources.Initialize();
 
