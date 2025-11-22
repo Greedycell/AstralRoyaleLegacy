@@ -29,9 +29,9 @@ namespace ClashRoyale
             Console.Title = $"AstralRoyale: V{ClashRoyale.Core.Configuration.Version} (by: @Greedycell on GitHub)";
             Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-            string remoteUrl = "https://raw.githubusercontent.com/Greedycell/AstralRoyale/refs/heads/master/project_update_check";
-            string remotereasonUrl = "https://raw.githubusercontent.com/Greedycell/AstralRoyale/refs/heads/master/project_update_reason_check";
-            string ProjectPage = "https://github.com/Greedycell/AstralRoyale/releases/tag/Server";
+            string remoteUrl = "https://raw.githubusercontent.com/Greedycell/AstralRoyaleLegacy/refs/heads/master/project_update_check";
+            string remotereasonUrl = "https://raw.githubusercontent.com/Greedycell/AstralRoyaleLegacy/refs/heads/master/project_update_reason_check";
+            string ProjectPage = "https://github.com/Greedycell/AstralRoyaleLegacy";
 
             try
             {
