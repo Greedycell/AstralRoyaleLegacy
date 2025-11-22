@@ -96,7 +96,7 @@ namespace ClashRoyale
                 " / ___ \\\\__ \\ |_| | | (_| | |  _ < (_) | |_| | (_| | |  __/\n" +
                 "/_/   \\_\\___/\\__|_|  \\__,_|_|_| \\_\\___/ \\__, |\\__,_|_|\\___|\n" +
                 "                                        |___/                 ");
-            Console.WriteLine("RetroRoyale fork by @astralsc");
+            Console.WriteLine("RetroRoyale fork by @Greedycell");
 
             Resources.Initialize();
 
