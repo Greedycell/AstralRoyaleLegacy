@@ -11,7 +11,7 @@
 #### CLIENTS DOWNLOAD: https://github.com/Greedycell/AstralRoyale/releases/tag/Clients
 #### PORT FORWARD APP DOWNLOAD: https://github.com/Greedycell/AstralRoyale/releases/tag/PortForward
 
-## [Changelogs (click to view)](https://raw.githubusercontent.com/astralsc/AstralRoyale/refs/heads/master/repo_changelogs)
+## [Changelogs (click to view)](https://raw.githubusercontent.com/Greedycell/AstralRoyale/refs/heads/master/repo_changelogs)
 
 ## Features
 ```
