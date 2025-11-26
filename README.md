@@ -7,11 +7,10 @@
 ##### Need help? Join our [Discord](https://discord.gg/mUredE6CTU) or [Subreddit](https://www.reddit.com/r/astralcell)
 #### Want to help us? Fork this project and you could try add stuff!
 
-#### SERVER DOWNLOAD: https://github.com/Greedycell/AstralRoyale/releases/tag/Server
-#### CLIENTS DOWNLOAD: https://github.com/Greedycell/AstralRoyale/releases/tag/Clients
-#### PORT FORWARD APP DOWNLOAD: https://github.com/Greedycell/AstralRoyale/releases/tag/PortForward
+#### CLIENTS DOWNLOAD: https://github.com/Greedycell/AstralRoyaleLegacy/releases/tag/Clients
+#### PORT FORWARD APP DOWNLOAD: https://github.com/Greedycell/AstralRoyaleLegacy/releases/tag/PortForward
 
-## [Changelogs (click to view)](https://raw.githubusercontent.com/Greedycell/AstralRoyale/refs/heads/master/repo_changelogs)
+## [Changelogs (click to view)](https://raw.githubusercontent.com/Greedycell/AstralRoyaleLegacy/refs/heads/master/repo_changelogs)
 
 ## Features
 ```
@@ -67,7 +66,7 @@ If you're on Linux run the commands below.
 ###### Main Server:
 ```
 cd /where/your/directory/you/put/ClashRoyale
-dotnet publish \"ClashRoyale.csproj\" -c Release -o app && copy /Y filter.json app\
+dotnet publish "ClashRoyale.csproj" -c Release -o app && cp -f filter.json app/
 ```
 
 #### Run the server:
