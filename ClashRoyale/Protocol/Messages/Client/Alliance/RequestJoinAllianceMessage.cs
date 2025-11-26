@@ -28,6 +28,20 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
             var alliance = await Resources.Alliances.GetAllianceAsync(AllianceId);
             if (alliance == null) return;
 
+            // Check if player is already in a clan
+            if (Device.Player.Home.AllianceInfo.HasAlliance)
+            {
+                await new AllianceJoinRequestFailedMessage(Device).SendAsync();
+                return;
+            }
+
+            // Check trophy requirements
+            if (Device.Player.Home.Arena.Trophies < alliance.RequiredScore)
+            {
+                await new AllianceJoinRequestFailedMessage(Device).SendAsync();
+                return;
+            }
+
             if (alliance.Members.Count <= 0 || alliance.Members.Count >= 50)
             {
                 await new AllianceJoinRequestFailedMessage(Device).SendAsync();

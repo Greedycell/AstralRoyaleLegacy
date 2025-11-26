@@ -27,14 +27,15 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
             var home = Device.Player.Home;
             if (alliance == null) return;
 
-            // Check if player has enough trophies to join
-            if (home.Arena.Trophies < alliance.RequiredScore)
+            // Check if player is already in a clan
+            if (home.AllianceInfo.HasAlliance)
             {
                 await new AllianceJoinFailedMessage(Device).SendAsync();
                 return;
             }
 
-            if (alliance.Type != 1) // 1 = Open, 2 = InviteOnly, 3 = Closed
+            // Check if player has enough trophies to join
+            if (home.Arena.Trophies < alliance.RequiredScore)
             {
                 await new AllianceJoinFailedMessage(Device).SendAsync();
                 return;

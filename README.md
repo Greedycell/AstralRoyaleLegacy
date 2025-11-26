@@ -4,14 +4,14 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 #### A .NET Core 2017 Clash Royale Server (v1.9.0 - v1.9.3)
-##### Need help? Join our [Discord](https://discord.gg/mUredE6CTU) or [Subreddit](https://www.reddit.com/r/astralcell)
+##### Need help? Join our [Discord](https://discord.gg/mUredE6CTU)
 #### Want to help us? Fork this project and you could try add stuff!
 
-#### SERVER DOWNLOAD: https://github.com/Greedycell/AstralRoyale/releases/tag/Server
-#### CLIENTS DOWNLOAD: https://github.com/Greedycell/AstralRoyale/releases/tag/Clients
-#### PORT FORWARD APP DOWNLOAD: https://github.com/Greedycell/AstralRoyale/releases/tag/PortForward
+#### SERVER DOWNLOAD: https://github.com/Greedycell/AstralRoyaleLegacy/releases/tag/Server
+#### CLIENTS DOWNLOAD: https://github.com/Greedycell/AstralRoyaleLegacy/releases/tag/Clients
+#### PORT FORWARD APP DOWNLOAD: https://github.com/Greedycell/AstralRoyaleLegacy/releases/tag/PortForward
 
-## [Changelogs (click to view)](https://raw.githubusercontent.com/Greedycell/AstralRoyale/refs/heads/master/repo_changelogs)
+## [Changelogs (click to view)](https://raw.githubusercontent.com/Greedycell/AstralRoyaleLegacy/refs/heads/master/repo_changelogs)
 
 ## Features
 ```

@@ -43,6 +43,22 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
             if (Accepted)
             {
                 var player = await Resources.Players.GetPlayerAsync(newEntry.SenderId);
+
+                // Check if player is already in a clan before accepting
+                if (player.Home.AllianceInfo.HasAlliance)
+                {
+                    // Player already joined another clan, reject the request
+                    alliance.Save();
+                    return;
+                }
+
+                // Check if alliance is full
+                if (alliance.Members.Count >= 50)
+                {
+                    alliance.Save();
+                    return;
+                }
+
                 alliance.Add(new AllianceMember(player, Logic.Clan.Alliance.Role.Member));
 
                 player.Home.AllianceInfo = alliance.GetAllianceInfo(player.Home.Id);

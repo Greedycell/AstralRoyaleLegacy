@@ -103,6 +103,12 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
                 return;
             }
 
+            // Check if player is already in a clan
+            if (player.Home.AllianceInfo.HasAlliance)
+            {
+                return;
+            }
+
             if (!player.Home.UseGold(1000)) return;
 
             var alliance = await AllianceDb.CreateAsync();
