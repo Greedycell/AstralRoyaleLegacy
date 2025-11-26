@@ -7,7 +7,6 @@
 ##### Need help? Join our [Discord](https://discord.gg/mUredE6CTU)
 #### Want to help us? Fork this project and you could try add stuff!
 
-#### SERVER DOWNLOAD: https://github.com/Greedycell/AstralRoyaleLegacy/releases/tag/Server
 #### CLIENTS DOWNLOAD: https://github.com/Greedycell/AstralRoyaleLegacy/releases/tag/Clients
 #### PORT FORWARD APP DOWNLOAD: https://github.com/Greedycell/AstralRoyaleLegacy/releases/tag/PortForward
 
