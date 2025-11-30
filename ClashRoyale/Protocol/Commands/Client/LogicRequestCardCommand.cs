@@ -5,13 +5,37 @@ using ClashRoyale.Logic;
 using ClashRoyale.Logic.Clan;
 using ClashRoyale.Logic.Clan.StreamEntry.Entries;
 using ClashRoyale.Utilities.Netty;
+using ClashRoyale.Protocol.Messages.Server;
 using DotNetty.Buffers;
 
 namespace ClashRoyale.Protocol.Commands.Client
 {
     public class LogicRequestCardCommand : LogicCommand
     {
-        public int CardId;
+        public LogicRequestCardCommand(Device device, IByteBuffer buffer) : base(device, buffer)
+        {
+        }
+
+        public override void Decode()
+        {
+            base.Decode();
+
+            Reader.ReadVInt();//67
+            Reader.ReadVInt();//67
+            Reader.ReadVInt();//0
+            Reader.ReadVInt();//7
+        }
+
+        public override async void Process()
+        {
+            await new ServerErrorMessage(Device)
+            {
+                Message = "Not implemented yet."
+            }.SendAsync();
+        }
+        
+        //BUGGED:
+        /*public int CardId;
         public int Amount;
         public int CardType;
         public int CardInstance;
@@ -229,6 +253,6 @@ namespace ClashRoyale.Protocol.Commands.Client
             }
             // For Epics/Legendaries: not requestable in normal clan requests, but fallback to 1.
             return 1;
-        }
+        }*/
     }
 }
