@@ -199,7 +199,7 @@ namespace ClashRoyale.Logic
 
             packet.WriteVInt(4);
             {
-                int[] chestClassID = {242, 232, 235, 225, 224, 228, 114};
+                int[] chestClassID = {242, 232, 235, 225, 224, 228, 114, 251};
                 Random rnd = new Random();
                 int[] chestIndexes = {3, 4, 6, 7}; // the first VInt values for each chest
 

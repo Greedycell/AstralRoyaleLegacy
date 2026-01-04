@@ -1,6 +1,6 @@
 # <p align="center">AstralRoyale</p>
 # <p align="center">Clash Royale server for 1.9.0 - 1.9.3</p>
-[![clash royale](https://img.shields.io/badge/Clash%20Royale-1.9-brightred.svg?style=flat")](https://github.com/Greedycell/AstralRoyale/releases/tag/Clients)
+[![clash royale](https://img.shields.io/badge/Clash%20Royale-1.9-brightred.svg?style=flat")](https://github.com/Greedycell/AstralRoyaleLegacy/releases/tag/Clients)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 #### A .NET Core 2017 Clash Royale Server (v1.9.0 - v1.9.3)
@@ -30,12 +30,13 @@
 14. 2v2 round results working
 15. Donations (donations send but you can't donate to the donation requester)
 16. Sending Clan Mail
-17. Friends system (for now you can't accept the requests from a link will come soon)
+17. Content Patch Server (Part of the content patch to download files from a HTTP server)
 ```
 
 ## Partial Features
 ```
 1. Achievements
+2. Friends system (for now you can't accept the requests from a link will come soon)
 ```
 
 ## Incomplete Features
@@ -50,7 +51,7 @@
 ## Battles
 The server supports battles, for those a patched client is neccessary.
 
-[See the wiki for a tutorials](https://github.com/Greedycell/AstralRoyale/wiki/)
+[See the wiki for a tutorials](https://github.com/Greedycell/AstralRoyaleLegacy/wiki/)
 
 ## How to start
 

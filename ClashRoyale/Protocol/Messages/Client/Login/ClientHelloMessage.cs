@@ -39,7 +39,9 @@ namespace ClashRoyale.Protocol.Messages.Client.Login
             DeviceType = Reader.ReadInt();
             AppStore = Reader.ReadInt();
 
-            Console.WriteLine(Protocol);
+            Console.WriteLine(
+                $"ClientHelloMessage:\n Protocol:{Protocol}\n KeyVersion:{KeyVersion}\n Major:{MajorVersion}\n Minor:{MinorVersion}\n Build:{Build}\n FingerprintSha:{FingerprintSha}\n DeviceType:{DeviceType}\n AppStore:{AppStore}"
+            );
         }
 
         public override async void Process()

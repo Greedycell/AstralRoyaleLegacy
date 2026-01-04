@@ -23,7 +23,7 @@ namespace ClashRoyale.Protocol.Messages.Server
     {
         public FriendsAcceptMessage(Device Device) : base(Device)
         {
-            Id = 20105;
+            Id = 20501;
         }
 
         public override void Encode()
