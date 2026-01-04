@@ -17,7 +17,7 @@ namespace ClashRoyale
     public static class Program
     {
         // Local Build Version
-        private static readonly string LocalVersion = "1.9.2_4"; // Your Server Version
+        private static readonly string LocalVersion = "1.9.2_5"; // Your Server Version
 
         private static bool _isRunning = true;
         public static DateTime MaintenanceEndTime = DateTime.UtcNow;
@@ -104,6 +104,7 @@ namespace ClashRoyale
 
             if (ServerUtils.IsLinux())
             {
+                Logger.Log("Type /help for commands.", null);
                 CommandLoop();
             }
             else
@@ -165,6 +166,8 @@ namespace ClashRoyale
                         Logger.Log("/shutdown - Shutdown the server", null);
                         Logger.Log("/maintenance - Enable/Disable maintenance", null);
                         Logger.Log("/key - Generates a random RC4 key", null);
+                        Logger.Log("/startwebapi - Starts the WebAPI", null);
+                        Logger.Log("/stopwebapi - Stops the WebAPI", null);
                         break;
 
                     case "/shutdown":
@@ -191,6 +194,14 @@ namespace ClashRoyale
 
                     case "/key":
                         Logger.Log($"Generated RC4 Key: {GenerateRc4Key}", null);
+                        break;
+
+                    case "/startwebapi":
+                        API.Start();
+                        break;
+
+                    case "/stopwebapi":
+                        API.Stop();
                         break;
 
                     default:
@@ -387,6 +398,7 @@ namespace ClashRoyale
         public static void Exit()
         {
             API.Stop();
+            ContentServer.Stop();
             _isRunning = false;
             Environment.Exit(0);
         }

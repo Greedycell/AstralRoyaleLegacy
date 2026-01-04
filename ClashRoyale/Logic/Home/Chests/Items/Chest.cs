@@ -11,7 +11,8 @@ namespace ClashRoyale.Logic.Home.Chests.Items
         {
             Free = 2,
             Crown = 3,
-            Shop = 4
+            Shop = 4,
+            Slot = 5,
         }
 
         public int ChestId { get; set; }

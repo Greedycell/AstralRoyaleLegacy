@@ -38,6 +38,10 @@ namespace ClashRoyale.Protocol.Messages.Client.Login
             FingerprintSha = Reader.ReadScString();
             DeviceType = Reader.ReadInt();
             AppStore = Reader.ReadInt();
+
+            Console.WriteLine(
+                $"ClientHelloMessage:\n Protocol:{Protocol}\n KeyVersion:{KeyVersion}\n Major:{MajorVersion}\n Minor:{MinorVersion}\n Build:{Build}\n FingerprintSha:{FingerprintSha}\n DeviceType:{DeviceType}\n AppStore:{AppStore}"
+            );
         }
 
         public override async void Process()
@@ -59,7 +63,7 @@ namespace ClashRoyale.Protocol.Messages.Client.Login
             await new LoginFailedMessage(Device)
             {
                 Reason =
-                    "You are using an unpatched client. Please setup a content patch in the apk or on the server.",
+                    "You are using an unpatched client. Please setup a content patch in the IPA/APK or on the server.",
                 SkipCrypto = true
             }.SendAsync();
         }

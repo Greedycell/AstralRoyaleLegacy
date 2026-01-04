@@ -11,6 +11,8 @@ namespace ClashRoyale.Protocol.Messages.Server
         }
 
         public string Name { get; set; }
+        public int ErrorCode { get; set; }
+        public bool IsValid { get; set; }
 
         // Errorcodes:
         // 1 = invalid
@@ -21,8 +23,8 @@ namespace ClashRoyale.Protocol.Messages.Server
 
         public override void Encode()
         {
-            Writer.WriteBoolean(false); // IsValid
-            Writer.WriteInt(0); // ErrorCode
+            Writer.WriteBoolean(IsValid); // IsValid
+            Writer.WriteInt(ErrorCode); // ErrorCode
             Writer.WriteScString(Name);
         }
     }

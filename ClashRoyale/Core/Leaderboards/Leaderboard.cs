@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 using ClashRoyale.Database;
@@ -7,6 +8,7 @@ using ClashRoyale.Files;
 using ClashRoyale.Files.CsvLogic;
 using ClashRoyale.Logic;
 using ClashRoyale.Logic.Clan;
+using ClashRoyale.Logic.Home;
 using ClashRoyale.Utilities;
 using SharpRaven.Data;
 
@@ -16,12 +18,8 @@ namespace ClashRoyale.Core.Leaderboards
     {
         private readonly Timer _timer = new Timer(20000);
 
-        // Alliance
         public List<Alliance> GlobalAllianceRanking = new List<Alliance>(200);
-        public Dictionary<string, List<Alliance>> LocalAllianceRanking = new Dictionary<string, List<Alliance>>(18);
-
-        // Player
-        public List<Player> GlobalPlayerRanking = new List<Player>(200);
+        public List<Player> GlobalPlayerRanking = new List<Player>(18);
         public Dictionary<string, List<Player>> LocalPlayerRanking = new Dictionary<string, List<Player>>(18);
 
         public Leaderboard()
@@ -31,11 +29,7 @@ namespace ClashRoyale.Core.Leaderboards
             _timer.Start();
 
             foreach (var locales in Csv.Tables.Get(Csv.Files.Locales).GetDatas())
-            {
-                var name = ((Locales)locales).Name;
-                LocalPlayerRanking.Add(name, new List<Player>(200));
-                LocalAllianceRanking.Add(name, new List<Alliance>(18));
-            }
+                LocalPlayerRanking.Add(((Locales) locales).Name, new List<Player>(999));
 
             Update(null, null);
         }
@@ -64,20 +58,38 @@ namespace ClashRoyale.Core.Leaderboards
 
                     var currentGlobalAllianceRanking = await AllianceDb.GetGlobalAlliancesAsync();
                     for (var i = 0; i < currentGlobalAllianceRanking.Count; i++)
-                        GlobalAllianceRanking.UpdateOrInsert(i, currentGlobalAllianceRanking[i]);
-
-                    foreach (var (key, value) in LocalAllianceRanking)
-                    {
-                        var currentLocalAllianceRanking = await AllianceDb.GetLocalAllianceRankingAsync(key);
-                        for (var i = 0; i < currentLocalAllianceRanking.Count; i++)
-                            value.UpdateOrInsert(i, currentLocalAllianceRanking[i]);
-                    }
+                        GlobalAllianceRanking.UpdateOrInsert(i, currentGlobalAllianceRanking[i]);                                     
                 }
                 catch (Exception exception)
                 {
                     Logger.Log($"Error while updating leaderboads {exception}", GetType(), ErrorLevel.Error);
                 }
             });
+        }
+        public int GetPlayerRankingById(int id)
+        {
+            Player playerToFind = GlobalPlayerRanking.FirstOrDefault(player => player.Id == id);
+
+            if (playerToFind != null)
+            {
+                int playerIndex = GlobalPlayerRanking.IndexOf(playerToFind);
+                return playerIndex + 1;
+            }
+            return -1;
+        }
+        public int GetPlayerLocalRankingById(int id)
+        {
+            foreach (var kvp in LocalPlayerRanking)
+            {
+                Player playerToFind = kvp.Value.FirstOrDefault(player => player.Id == id);
+
+                if (playerToFind != null)
+                {
+                    int playerIndex = kvp.Value.IndexOf(playerToFind);
+                    return playerIndex + 1;
+                }
+            }
+            return -1;
         }
     }
 }

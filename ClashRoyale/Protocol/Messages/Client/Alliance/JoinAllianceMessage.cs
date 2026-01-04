@@ -1,4 +1,4 @@
-﻿using ClashRoyale.Logic;
+using ClashRoyale.Logic;
 using ClashRoyale.Logic.Clan;
 using ClashRoyale.Logic.Clan.StreamEntry.Entries;
 using ClashRoyale.Protocol.Commands.Server;
@@ -26,6 +26,20 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
             var alliance = await Resources.Alliances.GetAllianceAsync(AllianceId);
             var home = Device.Player.Home;
             if (alliance == null) return;
+
+            // Check if player is already in a clan
+            if (home.AllianceInfo.HasAlliance)
+            {
+                await new AllianceJoinFailedMessage(Device).SendAsync();
+                return;
+            }
+
+            // Check if player has enough trophies to join
+            if (home.Arena.Trophies < alliance.RequiredScore)
+            {
+                await new AllianceJoinFailedMessage(Device).SendAsync();
+                return;
+            }
 
             if (alliance.Members.Count <= 0 || alliance.Members.Count >= 50)
             {

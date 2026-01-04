@@ -8,15 +8,14 @@ using ClashRoyale.Protocol.Messages.Server;
 using ClashRoyale.Utilities.Netty;
 using DotNetty.Buffers;
 
-namespace ClashRoyale.Protocol
+namespace ClashRoyale.Protocol.Commands.Client
 {
-    internal class StartTournamentMatchmakeCommand : LogicCommand
+    public class StartTournamentMatchmakeCommand : LogicCommand
     {
         private readonly Random _random = new Random();
 
         public StartTournamentMatchmakeCommand(Device device, IByteBuffer buffer) : base(device, buffer)
         {
-            Process();
         }
 
         public bool IsTournament { get; set; }
@@ -56,8 +55,8 @@ namespace ClashRoyale.Protocol
                 EstimatedDuration = _random.Next(101, 601)
             }.SendAsync();
 
-/*            var enemy = Resources.TournamentBattles.Dequeue;
-            if (enemy != null)
+            var enemy = Resources.TournamentBattles.Dequeue;
+            if (enemy != null && enemy.Home.Id != Device.Player.Home.Id)
             {
                 int randomKey = ArenaValueTable.Keys.ElementAt(_random.Next(ArenaValueTable.Count));
 
@@ -77,8 +76,13 @@ namespace ClashRoyale.Protocol
             }
             else
             {
+                if (enemy != null && enemy.Home.Id == Device.Player.Home.Id)
+                {
+                    Resources.TournamentBattles.Enqueue(enemy);
+                }
+
                 Resources.TournamentBattles.Enqueue(Device.Player);
-            }*/
+            }
         }
     }
 }

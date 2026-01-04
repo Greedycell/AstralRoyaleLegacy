@@ -27,10 +27,12 @@ public class FriendsListMessage : PiranhaMessage
         Id = 20105;
 
         this.Friends = Device.Player.Home.Friends;
+
+        Encode();
     }
 
 
-    public override void Encode()
+    public async Task Encode()
     {
         var packet = this.Writer;
         packet.WriteInt(this.Friends.Count); // Number of friends
@@ -38,21 +40,30 @@ public class FriendsListMessage : PiranhaMessage
 
         foreach (var Friend in this.Friends)
         {
-            packet.WriteLong(Friend.PlayerId);                    // Player ID
-            packet.WriteBoolean(true);                            // Is online
-            packet.WriteLong(Friend.PlayerId);                    // Player ID again
-            packet.WriteScString(Friend.Name ?? "");              // Name
-            packet.WriteScString(Friend.Facebook?.Identifier ?? ""); // Facebook ID
-            packet.WriteScString(Friend.Gamecenter?.Identifier ?? ""); // Gamecenter ID
-            packet.WriteVInt(Friend.ExpLevel);                    // Exp Level
-            packet.WriteVInt(Friend.Score);                       // Score
-            packet.WriteBoolean(false);                           // HasClan
-            packet.WriteVInt(Friend.Arena);                       // Arena
-            packet.WriteScString(null);                           // Clan Name
-            packet.WriteScString(null);                           // Clan Tag
-            packet.WriteVInt(-1);                                 // Clan Badge
-            packet.WriteInt(0);                                   // Challenge State
-            packet.WriteInt(0);                                   // Challenge Wins
+            try
+            {
+                var friend_player = await PlayerDb.GetAsync(Friend.PlayerId);
+
+                packet.WriteLong(friend_player.Home.Id);                    // Player ID
+                packet.WriteBoolean(true);                            // Is online
+                packet.WriteLong(friend_player.Home.Id);                    // Player ID again
+                packet.WriteScString(friend_player.Home.Name ?? "Unnamed");              // Name
+                packet.WriteScString(Friend.Facebook?.Identifier ?? ""); // Facebook ID
+                packet.WriteScString(Friend.Gamecenter?.Identifier ?? ""); // Gamecenter ID
+                packet.WriteVInt(friend_player.Home.ExpLevel);                    // Exp Level
+                packet.WriteVInt(friend_player.Home.Arena.Trophies);                       // Score
+                packet.WriteBoolean(false);                           // HasClan
+                packet.WriteVInt(friend_player.Home.Arena.CurrentArena);                       // Arena
+                packet.WriteScString(null);                           // Clan Name
+                packet.WriteScString(null);                           // Clan Tag
+                packet.WriteVInt(-1);                                 // Clan Badge
+                packet.WriteInt(0);                                   // Challenge State
+                packet.WriteInt(0);                                   // Challenge Wins
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Friend list could not load because an error has occured.");
+            }
         }
     }
 }

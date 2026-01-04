@@ -17,6 +17,7 @@ namespace ClashRoyale.Logic.Home
 
         [JsonProperty("arena")] public int CurrentArena { get; set; }
         [JsonProperty("trophies")] public int Trophies { get; set; }
+        [JsonProperty("legendary trophies")] public int LTrophies { get; set; }
 
         /// <summary>
         ///     Add trophies and update arena and clan

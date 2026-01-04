@@ -17,10 +17,10 @@ namespace ClashRoyale.Protocol
                 {1, typeof(DoSpellCommand)},
                 {500, typeof(LogicSwapSpellsCommand)},
                 {501, typeof(LogicSelectDeckCommand)},
-                //{502, typeof(LogicStartChestUnlockCommand)},  // Start unlocking chest
-                //{503, typeof(LogicCollectChestCommand)}, // Unlock Chest
+                //{502, typeof(LogicStartChestUnlockCommand)},  // TODO: Start unlocking chest
+                {503, typeof(LogicCollectChestCommand)}, // Unlock Chest
                 {504, typeof(LogicFuseSpellsCommand)},
-                //{505, typeof(LogicCollectChestCommand)}, // Unlock Chest (With Gems)
+                {505, typeof(LogicCollectChestCommand)}, // Unlock Chest (With Gems)
                 {507, typeof(LogicBuyResourcePackCommand)},
                 {508, typeof(LogicXPLevelUpCommand)}, // TODO
                 {509, typeof(LogicCollectFreeChestCommand)},
@@ -34,12 +34,13 @@ namespace ClashRoyale.Protocol
                 //{520, typeof(LogicShopSeenCommand)},
                 {521, typeof(LogicSendAllianceMailCommand)}, // TODO
                 {522, typeof(LogicChallengeCommand)},
-                {523, typeof(ClaimAchievementsCommand)}, // TODO
+                {523, typeof(ClaimAchievementsCommand)},
                 {524, typeof(LogicRequestCardCommand)},
                 {525, typeof(StartMatchmakeCommand)},
                 {526, typeof(LogicChestNextCardCommand)},
                 {529, typeof(LogicCopyDeckCommand)},
-                {531, typeof(LogicCreateTournamentCommand)},
+                {530, typeof(LogicShareReplayCommand)}, // TODO
+                {531, typeof(LogicCreateTournamentCommand)}, // TODO
                 {536, typeof(LogicTvReplaySeenCommand)},
                 {537, typeof(EnterTournamentCommand)}, // TODO
                 {539, typeof(StartTournamentMatchmakeCommand)}, // TODO

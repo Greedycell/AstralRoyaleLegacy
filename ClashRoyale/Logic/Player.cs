@@ -7,12 +7,14 @@ using ClashRoyale.Protocol.Messages.Client.Alliance;
 using ClashRoyale.Database;
 using ClashRoyale.Extensions;
 using ClashRoyale.Logic;
+using ClashRoyale.Logic.Home;
 using ClashRoyale.Logic.Battle;
 using ClashRoyale.Logic.Home.StreamEntry;
 using ClashRoyale.Protocol.Messages.Server;
 using ClashRoyale.Utilities.Netty;
 using ClashRoyale.Utilities.Utils;
 using ClashRoyale.Logic.Home.Chests.Items;
+using ClashRoyale.Core.Leaderboards;
 using ClashRoyale.Files;
 using ClashRoyale.Files.CsvLogic;
 using DotNetty.Buffers;
@@ -24,8 +26,12 @@ namespace ClashRoyale.Logic
 {
     public class Player
     {
+        public long Id { get; set; }
+        Leaderboard leaderboard = Resources.Leaderboard;
+
         public Player(long id)
         {
+            Id = id;
             Home = new Home.Home(id, GameUtils.GenerateToken);
         }
 
@@ -101,8 +107,6 @@ namespace ClashRoyale.Logic
         {
             packet.WriteLong(Home.Id);
 
-            Console.WriteLine($"{Home.Name} (ID: {Home.Id}, Trophies: {(long) Home.Arena.Trophies}, Arena: {Home.Arena.CurrentArena}) has joined the server! (Client: {Device.Session.GameVersion}, IP: {Device.Session.Ip})");
-
             // Unknown
             {
                 packet.WriteVInt(0);
@@ -177,56 +181,45 @@ namespace ClashRoyale.Logic
             // Events
             packet.WriteVInt(2);
             {
-                /*packet.WriteVInt(1);
-                {
-                    packet.WriteScString("{\"GameMode\":\"DraftMode\",\"Target_MinXPLevel\":3,\"HideTimer\":false,\"HidePopupTimer\":true}");
-                }*/
+                /*packet.WriteVInt(0);
+                packet.WriteScString("{\"GameMode\":\"DraftMode\",\"Target_MinXPLevel\":3,\"HideTimer\":true,\"HidePopupTimer\":true}");*/
 
-                /*packet.WriteVInt(1);
-                {
-                    packet.WriteScString("{\"ID\":\"SHOP_CYCLE_MANAGEMENT\",\"Params\":{\"EpicChestCycleDuration\":5,\"LegendaryChestCycleDuration\":7,\"ArenaPackCycleDuration\":7}}");
-                }*/
+                /*packet.WriteVInt(0);
+                packet.WriteScString("{\"ID\":\"SHOP_CYCLE_MANAGEMENT\",\"Params\":{\"EpicChestCycleDuration\":5,\"LegendaryChestCycleDuration\":7,\"ArenaPackCycleDuration\":7}}");*/
 
                 packet.WriteVInt(2);
-                {
-                    packet.WriteScString("{\"ID\":\"CARD_RELEASE\",\"Params\":{}})");
-                }
+                packet.WriteScString("{\"ID\":\"CARD_RELEASE\",\"Params\":{}})");
 
                 /*packet.WriteVInt(3);
-                {
-                    packet.WriteScString("{\"ID\":\"KILL_SWITCH\",\"Params\":{\"HideShopOffersUI\":false}}");
-                }*/
+                packet.WriteScString("{\"ID\":\"KILL_SWITCH\",\"Params\":{\"HideShopOffersUI\":false}}");}*/
 
                 packet.WriteVInt(4);
-                {
-                    packet.WriteScString("{\"ID\":\"CLAN_CHEST\",\"Params\":{}}");
-                }
+                packet.WriteScString("{\"ID\":\"CLAN_CHEST\",\"Params\":{}}");
             }
 
             packet.WriteVInt(4);
-
-            // Chests
             {
-                for (var i = 0; i < 0; i++)
+                int[] chestClassID = {242, 232, 235, 225, 224, 228, 114, 251};
+                Random rnd = new Random();
+                int[] chestIndexes = {3, 4, 6, 7}; // the first VInt values for each chest
+
+                for (int i = 0; i < 4; i++)
                 {
-                    packet.WriteVInt(0);
-
-                    packet.WriteVInt(19); // Instance Id
-                    packet.WriteVInt(219); // Class Id 
-                    packet.WriteVInt(1); // Unlocked // 8 - unlocking -> timer
-
-                    //packet.WriteVInt(0);
-                    //packet.WriteVInt(0);
-                    //packet.WriteVInt(TimeUtils.CurrentUnixTimestamp);
-
-                    packet.WriteBoolean(false); // Claimed
-                    packet.WriteBoolean(false); // New
-                    packet.WriteVInt(0);
-                    packet.WriteVInt(0);
+                    int chest = chestClassID[rnd.Next(0, chestClassID.Length)];
+                    packet.WriteVInt(chestIndexes[i]); // first VInt
+                    packet.WriteVInt(19);              // Instance Id
+                    packet.WriteVInt(chest);           // Class Id
+                    packet.WriteBoolean(false);        // Unlocked
+                    packet.WriteVInt(i);               // some varying index
+                    packet.WriteVInt(i == 1 ? 1 : 0);  // second VInt (only for chest 2)
+                    packet.WriteVInt(i == 1 ? 1 : 0);  // third VInt (only for chest 2)
+                    packet.WriteVInt(999999);          // Claimed
+                    packet.WriteVInt(999999);          // New
+                    packet.WriteVInt(4);
+                    packet.WriteVInt(1);
+                    packet.WriteVInt(1);
                     packet.WriteVInt(0);
                 }
-
-                packet.WriteVInt(0);
             }
 
             /*// --- CHEST SLOTS ---
@@ -542,21 +535,29 @@ namespace ClashRoyale.Logic
                 }
                 packet.WriteVLong((long) Home.Arena.Trophies); // Trophies 
 
-                packet.WriteVInt(0);
-                packet.WriteVInt(0);
-                packet.WriteVInt(0); // Legendary Trophies
+                packet.WriteVInt(1);
+                packet.WriteVInt(1);
+                packet.WriteVInt(Home.Arena.LTrophies); // Legendary Trophies
 
-                packet.WriteVInt(0); // Current Season Trophies
-                packet.WriteVInt(0);
-                packet.WriteVInt(0); // Displays near League // maybe never used
+                if ((long) Home.Arena.Trophies >= 4000)
+                {
+                    packet.WriteVInt(Home.Arena.Trophies); // Current Season Trophies
+                }
+                else
+                {
+                    packet.WriteVInt(0);
+                }
 
-                packet.WriteVLong((long) Home.Arena.Trophies); // Best Season Trophies
-                packet.WriteVInt(0); // Rank
-                packet.WriteVInt(100); // Trophies
+                packet.WriteVInt(2); // ???
+                packet.WriteVInt(leaderboard.GetPlayerRankingById((int)Home.Id)); // Displays near League // maybe never used
+
+                packet.WriteVInt(Home.Arena.Trophies); // Best Season Trophies
+                packet.WriteVInt(Home.Arena.CurrentArena + 1); // Rank
+                packet.WriteVInt(1); // Trophies??
             }
 
             // League
-            packet.WriteVInt(0); // Current Trophies
+            packet.WriteVInt(leaderboard.GetPlayerLocalRankingById((int)Home.Id)); // Current Trophies
             packet.WriteVLong((long) Home.Arena.Trophies); // Past Trophies
             packet.WriteVInt(1);
             packet.WriteVInt(0);
@@ -736,13 +737,21 @@ namespace ClashRoyale.Logic
         /// </summary>
         public void ValidateSession()
         {
+            if (Device == null)
+                throw new InvalidOperationException("Device is null");
+            if (Device.Session == null)
+                throw new InvalidOperationException("Device.Session is null");
+            if (Home == null)
+                throw new InvalidOperationException("Home is null");
+            if (Home.Sessions == null)
+                throw new InvalidOperationException("Home.Sessions is null");
+
             var session = Device.Session;
-            session.Duration = (int) DateTime.UtcNow.Subtract(session.SessionStart).TotalSeconds;
+            session.Duration = (int)DateTime.UtcNow
+                .Subtract(session.SessionStart).TotalSeconds;
 
             Home.TotalPlayTimeSeconds += session.Duration;
-
             while (Home.Sessions.Count >= 50) Home.Sessions.RemoveAt(0);
-
             Home.Sessions.Add(session);
         }
 

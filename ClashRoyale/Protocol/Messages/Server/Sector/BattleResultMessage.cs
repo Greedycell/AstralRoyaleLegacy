@@ -39,8 +39,8 @@ namespace ClashRoyale.Protocol.Messages.Server
             // --- CHEST REWARD ---
             /*if (AwardedChest != null)
             {*/
-                Writer.WriteVInt(219); // TreasureChests ClassID
-                Writer.WriteVInt(19); // The specific InstanceID of the chest AwardedChest.GetInstanceId()
+                Writer.WriteVInt(0); // TreasureChests ClassID 219
+                Writer.WriteVInt(0); // The specific InstanceID of the chest AwardedChest.GetInstanceId() 19
             /*}
             else
             {
@@ -60,8 +60,8 @@ namespace ClashRoyale.Protocol.Messages.Server
 
             /*if (AwardedChest != null)
             {*/
-                Writer.WriteVInt(219); // TreasureChestData ClassID
-                Writer.WriteVInt(19);
+                Writer.WriteVInt(0); // TreasureChestData ClassID 219
+                Writer.WriteVInt(0); // 19
             /*}
             else
             {

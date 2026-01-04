@@ -93,6 +93,39 @@ namespace ClashRoyale.Logic.Home.Decks.Items
             }
         }
 
+        /// <summary>
+        /// Returns the unlock arena name for this card, or null if not found.
+        /// </summary>
+        [JsonIgnore]
+        public string UnlockArenaName
+        {
+            get
+            {
+                switch (ClassId)
+                {
+                    case 26:
+                        {
+                            var data = Csv.Tables.Get(Csv.Files.SpellsCharacters)
+                                .GetDataWithInstanceId<SpellsCharacters>(InstanceId);
+                            return data?.UnlockArena;
+                        }
+                    case 27:
+                        {
+                            var data = Csv.Tables.Get(Csv.Files.SpellsBuildings)
+                                .GetDataWithInstanceId<SpellsBuildings>(InstanceId);
+                            return data?.UnlockArena;
+                        }
+                    case 28:
+                        {
+                            var data = Csv.Tables.Get(Csv.Files.SpellsOther)
+                                .GetDataWithInstanceId<SpellsOther>(InstanceId);
+                            return data?.UnlockArena;
+                        }
+                }
+                return null;
+            }
+        }
+
         public LogicBattleSpell BattleSpell
         {
             get

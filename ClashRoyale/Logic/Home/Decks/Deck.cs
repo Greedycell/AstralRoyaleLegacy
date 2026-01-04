@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Diagnostics;
+using System.Collections.Generic;
 using System.Linq;
 using ClashRoyale.Logic.Home.Decks.Items;
 using ClashRoyale.Utilities.Netty;
@@ -13,12 +17,53 @@ namespace ClashRoyale.Logic.Home.Decks
 
         public void Initialize()
         {
-            for (var i = 0; i < 8; i++)
+            // what was inc thinking when making the original default deck... but atleast me and my contributors fixed it.
+
+            var defaultDeckCards = new List<(int ClassId, int InstanceId)>
             {
-                var card = new Card(26, i, false);
+                (26, 0),  // Knight
+                (26, 1),  // Archers
+                (26, 13), // Bomber
+                (28, 1),  // Arrows
+                (28, 0),  // Fireball
+                (26, 3),  // Giant
+            };
+
+            // One random rare
+            var rareCards = new List<(int ClassId, int InstanceId)>
+            {
+                (26, 18),  // Mini Pekka
+                (26, 14),  // Musketeer
+            };
+
+            // One random epic
+            var epicCards = new List<(int ClassId, int InstanceId)>
+            {
+                (26, 16), // Prince
+                (26, 15), // Baby Dragon
+                (26, 12), // Skeleton Army
+                (26, 7), // Witch
+            };
+
+            var random = new Random();
+
+            for (var i = 0; i < 6 && i < defaultDeckCards.Count; i++)
+            {
+                var (classId, instanceId) = defaultDeckCards[i];
+                var card = new Card(classId, instanceId, false);
                 Add(card);
                 foreach (var deck in Home.Decks) deck[i] = card.GlobalId;
             }
+
+            var selectedRare = rareCards[random.Next(rareCards.Count)];
+            var rareCard = new Card(selectedRare.ClassId, selectedRare.InstanceId, false);
+            Add(rareCard);
+            foreach (var deck in Home.Decks) deck[6] = rareCard.GlobalId;
+
+            var selectedEpic = epicCards[random.Next(epicCards.Count)];
+            var epicCard = new Card(selectedEpic.ClassId, selectedEpic.InstanceId, false);
+            Add(epicCard);
+            foreach (var deck in Home.Decks) deck[7] = epicCard.GlobalId;
         }
 
         /// <summary>
@@ -203,6 +248,139 @@ namespace ClashRoyale.Logic.Home.Decks
         {
             var card = GetCard(classId, instanceId);
             card.IsNew = false;
+        }
+
+                public Deck GenerateRandomDeck(bool rdm_deck, bool rdm_lvl)
+        {
+            Deck randomDeck = new Deck();
+            if (rdm_deck == false)
+                return Home.Deck;
+
+            Random random = new Random();
+            var chestArenas = Home.Arena.GetChestArenaNames(); // Get arenas for random cards
+
+            for (int i = 0; i < 8; i++)
+            {
+                Card card = null;
+                while (card == null)
+                {
+                    card = Cards.RandomByArena(Card.Rarity.Common, chestArenas) ??
+                           Cards.RandomByArena(Card.Rarity.Rare, chestArenas) ??
+                           Cards.RandomByArena(Card.Rarity.Epic, chestArenas) ??
+                           Cards.RandomByArena(Card.Rarity.Legendary, chestArenas) ??
+                           Cards.Random();
+                }
+
+                if (rdm_lvl == false)
+                {
+                    switch (card.CardRarity)
+                    {
+                        case Card.Rarity.Rare:
+                            card.Level = 10;
+                            break;
+                        case Card.Rarity.Epic:
+                            card.Level = 7;
+                            break;
+                        case Card.Rarity.Common:
+                            card.Level = 12;
+                            break;
+                        case Card.Rarity.Legendary:
+                            card.Level = 4;
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (card.CardRarity)
+                    {
+                        case Card.Rarity.Rare:
+                            card.Level = random.Next(1, 11);
+                            break;
+                        case Card.Rarity.Epic:
+                            card.Level = random.Next(1, 8);
+                            break;
+                        case Card.Rarity.Common:
+                            card.Level = random.Next(1, 13);
+                            break;
+                        case Card.Rarity.Legendary:
+                            card.Level = random.Next(1, 5);
+                            break;
+                    }
+                }
+
+                randomDeck.Add(card);
+            }
+
+            return randomDeck;
+        }
+
+        /// <summary>
+        /// Generate a random deck where all cards are set to a specific level,
+        /// and only cards unlockable in the provided arenas are used.
+        /// </summary>
+        /// <param name="level">The level to set for all cards (1-based).</param>
+        /// <param name="allowedArenas">A list of allowed arena names for card unlocks.</param>
+        /// <returns>Deck</returns>
+        public static Deck GenerateRandomDeckAtLevel(int level, List<string> allowedArenas)
+        {
+            if (level < 1) level = 1;
+            if (level > 13) level = 13;
+
+            Deck randomDeck = new Deck();
+            Random random = new Random();
+
+            var cards = Cards.GetAllCards()
+                .Where(card =>
+                {
+                    var unlockArena = card.UnlockArenaName;
+                    return unlockArena == null || allowedArenas.Contains(unlockArena);
+                })
+                .ToList();
+
+            cards = cards.OrderBy(x => random.Next()).ToList();
+
+            var selected = new HashSet<int>();
+            int i = 0;
+            while (randomDeck.Count < 8 && i < cards.Count)
+            {
+                var card = cards[i];
+
+                int cardMaxLevel = GetMaxLevelForRarity(card.CardRarity);
+                int effectiveLevel = Math.Min(level, cardMaxLevel);
+
+                var cardCopy = new Card(card.ClassId, card.InstanceId, false);
+                cardCopy.Level = effectiveLevel;
+
+                if (!selected.Contains(card.GlobalId))
+                {
+                    randomDeck.Add(cardCopy);
+                    selected.Add(card.GlobalId);
+                }
+                i++;
+            }
+            while (randomDeck.Count < 8 && cards.Count > 0)
+            {
+                var card = cards[random.Next(cards.Count)];
+                int cardMaxLevel = GetMaxLevelForRarity(card.CardRarity);
+                int effectiveLevel = Math.Min(level, cardMaxLevel);
+
+                var cardCopy = new Card(card.ClassId, card.InstanceId, false);
+                cardCopy.Level = effectiveLevel;
+                randomDeck.Add(cardCopy);
+            }
+            return randomDeck;
+        }
+
+        private static int GetMaxLevelForRarity(Card.Rarity rarity)
+        {
+            switch (rarity)
+            {
+                case Card.Rarity.Common: return 12;
+                case Card.Rarity.Rare: return 10;
+                case Card.Rarity.Epic: return 7;
+                case Card.Rarity.Legendary: return 4;
+                default: return 1;
+            }
         }
     }
 }

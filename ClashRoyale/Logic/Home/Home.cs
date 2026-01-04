@@ -17,12 +17,15 @@ using System.Linq;
 namespace ClashRoyale.Logic.Home
 {
     public class Home
-    {
+    {        
+        [JsonProperty("achievements")] public Achievements Achievements = new Achievements();
+
         [JsonProperty("clan_info")] public AllianceInfo AllianceInfo = new AllianceInfo();
         [JsonProperty("arena")] public Arena Arena = new Arena();
         [JsonProperty("chests")] public Chests.Chests Chests = new Chests.Chests();
         [JsonProperty("crownChestCooldown")] public DateTime CrownChestCooldown = DateTime.UtcNow;
         [JsonProperty("deck")] public Deck Deck = new Deck();
+        [JsonProperty("InviteAllianceToken")] public string InviteAllianceToken;
 
         // Chests
         [JsonProperty("freeChestTime")] public DateTime FreeChestTime = DateTime.UtcNow;
@@ -43,6 +46,12 @@ namespace ClashRoyale.Logic.Home
         // Friends
         public List<Friends> Friends { get; set; } = new List<Friends>();
         [JsonProperty("AddFriendToken")] public string AddFriendToken;
+
+        // Switch Account
+        [JsonProperty("acc_switchtoken")] public string acc_switchtoken;
+        [JsonProperty("acc_switch")] public int acc_switch;
+        [JsonProperty("acc_password")] public string acc_password;
+        [JsonProperty("acc_original_login_id")] public int acc_original_login_id;
 
         [JsonIgnore] public List<Session> Sessions = new List<Session>(50);
         [JsonProperty("shop")] public Shop.Shop Shop = new Shop.Shop();

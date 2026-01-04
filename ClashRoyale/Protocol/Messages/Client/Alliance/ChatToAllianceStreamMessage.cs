@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using ClashRoyale;
@@ -52,11 +52,21 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
             {
                 var cmd = Message.Split(' ');
                 var cmdType = cmd[0];
-                var cmdValue = 0;
+
+                int cmdValue = 0;
+                string cmdFirstString = "";
+                string cmdSecondString = "";
 
                 if (cmd.Length > 1)
-                    if (Message.Split(' ')[1].Any(char.IsDigit))
-                        int.TryParse(Message.Split(' ')[1], out cmdValue);
+                {
+                    cmdFirstString = cmd[1];
+
+                    if (cmd.Length > 2)
+                        cmdSecondString = cmd[2];
+
+                    if (cmdFirstString.All(char.IsDigit))
+                        int.TryParse(cmdFirstString, out cmdValue);
+                }
 
                 switch (cmdType)
                 {
@@ -96,14 +106,20 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
                     case "/gold":
                     {
                         Device.Player.Home.Gold += cmdValue;
-                        Device.Disconnect();
+                        await new ServerErrorMessage(Device)
+                        {
+                            Message = "Adding gold is successful. You can now reconnect!"
+                        }.SendAsync();
                         break;
                     }
 
                     case "/gems":
                     {
                         Device.Player.Home.Diamonds += cmdValue;
-                        Device.Disconnect();
+                        await new ServerErrorMessage(Device)
+                        {
+                            Message = "Adding gems is successful. You can now reconnect!"
+                        }.SendAsync();
                         break;
                     }
 
@@ -126,7 +142,7 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
                     {
                         var entry = new ChatStreamEntry
                         {
-                            Message = $"Commands:\n/help\n/status\n/max\n/unlock\n/gold x\n/gems x\n/free\n/adminhelp"
+                            Message = $"Commands:\n/help\n/status\n/max\n/unlock\n/gold x\n/gems x\n/free\n/switchacc x(userid) x(pass) or /switchacc reset\n/setpassword x\n/adminhelp"
                         };
 
                         entry.SetSender(Device.Player);
@@ -140,7 +156,7 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
                     {
                         var entry = new ChatStreamEntry
                         {
-                            Message = $"Admin Commands:\n/adminhelp\n/maintenance\n/admin\n/ban\n/unban\n/trophies x\n/settrophies"
+                            Message = $"Admin Commands:\n/adminhelp\n/maintenance x\n/admin x\n/unadmin x\n/ban x\n/unban x\n/trophies x\n/settrophies x"
                         };
 
                         entry.SetSender(Device.Player);
@@ -153,7 +169,159 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
                     case "/free":
                     {
                         Device.Player.Home.FreeChestTime = Device.Player.Home.FreeChestTime.Subtract(TimeSpan.FromMinutes(245));
-                        Device.Disconnect();
+                        await new ServerErrorMessage(Device)
+                        {
+                            Message = "Ending free chest time is successful. You can now reconnect!"
+                        }.SendAsync();
+                        break;
+                    }
+
+                    case "/switchacc":
+                    {
+                        if (string.IsNullOrWhiteSpace(cmdFirstString))
+                        {
+                            var entry = new ChatStreamEntry
+                            {
+                                Message = "Id(arg1) cannot be null."
+                            };
+
+                            entry.SetSender(Device.Player);
+                            alliance.AddEntry(entry);
+                            break;
+                        }
+                        else if (cmdFirstString == "reset")
+                        {
+                            long originalId = Device.Player.Home.acc_original_login_id;
+                            if (originalId != 0)
+                            {
+                                var originalPlayer = await PlayerDb.GetAsync(originalId);
+                                if (originalPlayer != null)
+                                {
+                                    var managedPlayer = await Resources.Players.Login(originalId, originalPlayer.Home.UserToken);
+                                    if (managedPlayer != null)
+                                    {
+                                        managedPlayer.Home.acc_switch = 0;
+                                        managedPlayer.Home.acc_switchtoken = null;
+                                        managedPlayer.Save();
+                                    }
+
+                                    Device.Player.Home.acc_switch = 0;
+                                    Device.Player.Home.acc_switchtoken = null;
+                                    Device.Player.Save();
+
+                                    await new ServerErrorMessage(Device)
+                                    {
+                                        Message = "Switches reset. Reload the game."
+                                    }.SendAsync();
+
+                                    Console.WriteLine($"Switches reset for {Device.Player.Home.Id} and original {originalId}");
+                                    Device.Disconnect();
+                                    return;
+                                }
+                            }
+
+                            Device.Player.Home.acc_switch = 0;
+                            Device.Player.Home.acc_switchtoken = null;
+                            Device.Player.Save();
+
+                            await new ServerErrorMessage(Device)
+                            {
+                                Message = "Switches reset. Reload the game."
+                            }.SendAsync();
+
+                            Console.WriteLine($"Switches reset for {Device.Player.Home.Id}");
+                            Device.Disconnect();
+                            return;
+                        }
+                        else
+                        {
+                            var player = await PlayerDb.GetAsync(cmdValue);
+
+                            if (player == null)
+                            {
+                                SendMessage($"player with ID {cmdValue} was not found.", alliance);
+                                break;
+                            }
+
+                            if (string.IsNullOrWhiteSpace(cmdSecondString))
+                            {
+                                var entry = new ChatStreamEntry
+                                {
+                                    Message = "Password(arg2) cannot be null."
+                                };
+
+                                entry.SetSender(Device.Player);
+                                alliance.AddEntry(entry);
+                                break;
+                            }
+                            else
+                            {
+                                var other_player = await PlayerDb.GetAsync(cmdValue);
+
+                                if (cmdSecondString == other_player.Home.acc_password)
+                                {
+                                    Device.Player.Home.acc_switch = (int)other_player.Home.Id;
+                                    Device.Player.Home.acc_switchtoken = other_player.Home.UserToken;
+                                    Device.Player.Home.acc_original_login_id = (int)other_player.Home.Id;
+                                    Device.Player.Save();
+                                    Device.Disconnect();
+                                }
+                                else
+                                {
+                                    var entry = new ChatStreamEntry
+                                    {
+                                        Message = "Password is incorrect."
+                                    };
+
+                                    entry.SetSender(Device.Player);
+                                    alliance.AddEntry(entry);
+                                    break;  
+                                }
+                            }
+                        }
+                        break;
+                    }
+
+                    case "/setpassword":
+                    {
+                        if (string.IsNullOrWhiteSpace(cmdFirstString))
+                        {
+                            var entry = new ChatStreamEntry
+                            {
+                                Message = "You need to set a password."
+                            };
+
+                            entry.SetSender(Device.Player);
+                            alliance.AddEntry(entry);
+                            break;
+                        }
+
+                        if (string.IsNullOrEmpty(Device.Player.Home.acc_password))
+                        {
+                            Device.Player.Home.acc_password = cmdFirstString;
+                            Device.Player.Save();
+
+                            var entry = new ChatStreamEntry
+                            {
+                                Message = "Password has been set and /switchacc is now ready to have account switching."
+                            };
+
+                            entry.SetSender(Device.Player);
+                            alliance.AddEntry(entry);
+                        }
+                        else
+                        {
+                            Device.Player.Home.acc_password = cmdFirstString;
+                            Device.Player.Save();
+
+                            var entry = new ChatStreamEntry
+                            {
+                                Message = "Password has been set."
+                            };
+
+                            entry.SetSender(Device.Player);
+                            alliance.AddEntry(entry);
+                        }
                         break;
                     }
 
@@ -282,16 +450,53 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
                         break;
                     }
 
+                    case "/unadmin":
+                    {
+                        if (ClashRoyale.Extensions.Utils.AdminUtils.CheckIfAdmin((int)Device.Player.Home.Id))
+                        {
+                            var player = await PlayerDb.GetAsync(cmdValue);
+
+                            if (player == null)
+                            {
+                                SendMessage($"player with ID {cmdValue} was not found.", alliance);
+                                Logger.Log($"player with ID {cmdValue} was not found.", null);
+                                break;
+                            }
+
+                            Resources.Configuration.Admins.Remove(player.Home.Id);
+                            Resources.Configuration.Save();
+                            Resources.Configuration.Initialize();
+                            SendMessage($"player with ID {cmdValue} is no longer an admin.", alliance);
+                            Logger.Log($"player with ID {cmdValue} is no longer an admin.", GetType());
+                        }
+                        else
+                        {
+                            SendMessage("only admins can use /unaadmin command.", alliance);
+                        }
+                        break;
+                    }
+
                     case "/trophies":
                     {
                         if (ClashRoyale.Extensions.Utils.AdminUtils.CheckIfAdmin((int)Device.Player.Home.Id))
                         {
                             if (cmdValue >= 0)
+                            {
                                 Device.Player.Home.Arena.AddTrophies(cmdValue);
+                                await new ServerErrorMessage(Device)
+                                {
+                                    Message = "Adding trophies is successful. You can now reconnect!"
+                                }.SendAsync();
+                            }
                             else if (cmdValue < 0)
+                            {
                                 Device.Player.Home.Arena.RemoveTrophies(cmdValue);
-                                Device.Disconnect();
+                                await new ServerErrorMessage(Device)
+                                {
+                                    Message = "Removing trophies is successful. You can now reconnect!"
+                                }.SendAsync();
                                 break;
+                            }
                         }
                         else
                         {
@@ -311,7 +516,10 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
                         if (ClashRoyale.Extensions.Utils.AdminUtils.CheckIfAdmin((int)Device.Player.Home.Id))
                         {
                             Device.Player.Home.Arena.SetTrophies(cmdValue);
-                            Device.Disconnect();
+                            await new ServerErrorMessage(Device)
+                            {
+                                Message = "Setting trophies is successful. You can now reconnect!"
+                            }.SendAsync();
                         }
                         else
                         {
@@ -357,38 +565,36 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
                     break;
                 }
             }
-else
-{
-    string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-    string filterPath = Path.Combine(currentDirectory, "filter.json");
-    string[] bannedWords = File.ReadAllLines(filterPath);
+            else
+            {
+                string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                string filterPath = Path.Combine(currentDirectory, "filter.json");
+                string[] bannedWords = File.ReadAllLines(filterPath);
 
-    string FilterMessage(string Message)
-    {
-        foreach (var word in bannedWords)
-        {
-            var replacement = new string('*', word.Length);
-            Message = System.Text.RegularExpressions.Regex.Replace(
-                Message,
-                System.Text.RegularExpressions.Regex.Escape(word),
-                replacement,
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase
-            );
+                string FilterMessage(string Message)
+                {
+                    foreach (var word in bannedWords)
+                    {
+                        var replacement = new string('*', word.Length);
+                        Message = System.Text.RegularExpressions.Regex.Replace(
+                            Message,
+                            System.Text.RegularExpressions.Regex.Escape(word),
+                            replacement,
+                            System.Text.RegularExpressions.RegexOptions.IgnoreCase
+                        );
+                    }
+                    return Message;
+                }
+
+                var filteredMessage = FilterMessage(Message);
+
+                var entry = new ChatStreamEntry
+                {
+                    Message = filteredMessage
+                };
+                entry.SetSender(Device.Player);
+                alliance.AddEntry(entry);
+            }
         }
-        return Message;
     }
-
-    var filteredMessage = FilterMessage(Message);
-
-    var entry = new ChatStreamEntry
-    {
-        Message = filteredMessage
-    };
-
-    entry.SetSender(Device.Player);
-
-        alliance.AddEntry(entry);
-}
-}
-}
 }

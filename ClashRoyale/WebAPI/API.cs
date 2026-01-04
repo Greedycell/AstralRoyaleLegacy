@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
@@ -12,13 +13,19 @@ namespace ClashRoyale.WebAPI
     public static class API
     {
         private static int Port = GetPortFromConfig();
-        private static HttpListener Listener;
+        private static TcpListener Listener;
         private static Thread WebAPIThread;
+        private static bool Running = false;
 
         public static void Start()
         {
-            WebAPIThread = new Thread(StartSafe);
-            WebAPIThread.IsBackground = true;
+            if (Running) return;
+
+            Running = true;
+            WebAPIThread = new Thread(StartSafe)
+            {
+                IsBackground = true
+            };
             WebAPIThread.Start();
         }
 
@@ -26,128 +33,107 @@ namespace ClashRoyale.WebAPI
         {
             try
             {
-                Logger.Log($"Attempting to start WebAPI on port '{Port}'...", null);
+                Logger.Log($"Starting WebAPI on port {Port}...", null);
 
-                if (!HttpListener.IsSupported)
+                Listener = new TcpListener(IPAddress.Any, Port);
+                Listener.Start();
+
+                Logger.Log($"WebAPI running on port {Port}.", null);
+
+                while (Running)
                 {
-                    Logger.Log("The current system doesn't support the WebAPI.", null);
-                    return;
-                }
-
-                Listener = new HttpListener();
-
-                // Only bind to localhost and 127.0.0.1
-                Listener.Prefixes.Add($"http://localhost:{Port}/");
-                Listener.Prefixes.Add($"http://127.0.0.1:{Port}/");
-
-                Listener.AuthenticationSchemes = AuthenticationSchemes.Anonymous;
-
-                try
-                {
-                    Listener.Start();
-                }
-                catch (HttpListenerException hex)
-                {
-                    Logger.Log($"Failed to start WebAPI: {hex.Message} (Error Code: {hex.ErrorCode}). Port may be in use.", null);
-                    return;
-                }
-
-                Logger.Log($"The WebAPI has been started on port '{Port}'.", null);
-
-                while (Listener != null && Listener.IsListening)
-                {
-                    try
+                    if (!Listener.Pending())
                     {
-                        var context = Listener.GetContext();
-                        ThreadPool.QueueUserWorkItem(c => HandleRequestSafe((HttpListenerContext)c), context);
+                        Thread.Sleep(10);
+                        continue;
                     }
-                    catch (ObjectDisposedException)
-                    {
-                        break;
-                    }
-                    catch (HttpListenerException)
-                    {
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Log($"WebAPI encountered an unexpected error and will stop: {ex.Message}", null);
-                        Stop();
-                        break;
-                    }
+
+                    TcpClient client = Listener.AcceptTcpClient();
+                    ThreadPool.QueueUserWorkItem(HandleClient, client);
                 }
+            }
+            catch (SocketException ex)
+            {
+                Logger.Log($"WebAPI socket error: {ex.Message}", null);
             }
             catch (Exception ex)
             {
-                Logger.Log($"WebAPI failed to start: {ex.Message}", null);
+                Logger.Log($"WebAPI failed: {ex.Message}", null);
+            }
+            finally
+            {
+                Listener?.Stop();
+                Logger.Log("WebAPI stopped.", null);
             }
         }
 
         public static void Stop()
         {
+            Running = false;
+
             try
             {
-                if (Listener != null)
+                Listener?.Stop();
+                WebAPIThread?.Join(500);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"Error stopping WebAPI: {ex.Message}", null);
+            }
+        }
+
+        private static void HandleClient(object obj)
+        {
+            TcpClient client = (TcpClient)obj;
+
+            try
+            {
+                using NetworkStream stream = client.GetStream();
+                using StreamReader reader = new StreamReader(stream);
+                using StreamWriter writer = new StreamWriter(stream) { AutoFlush = true };
+
+                string requestLine = reader.ReadLine();
+                if (string.IsNullOrEmpty(requestLine)) return;
+
+                string[] tokens = requestLine.Split(' ');
+                if (tokens.Length < 2) return;
+
+                string path = tokens[1];
+                string responseText;
+                string contentType = "text/html; charset=UTF-8";
+
+                if (path.StartsWith("/api"))
                 {
-                    if (Listener.IsListening)
-                        Listener.Stop();
-
-                    Listener.Close();
-                    Listener = null;
+                    responseText = GetJsonAPI();
+                    contentType = "application/json; charset=UTF-8";
                 }
-
-                Logger.Log("The WebAPI has been stopped.", null);
-            }
-            catch (Exception ex)
-            {
-                Logger.Log($"Error stopping the WebAPI: {ex.Message}", null);
-            }
-        }
-
-        private static void HandleRequestSafe(HttpListenerContext context)
-        {
-            try
-            {
-                HandleRequest(context);
-            }
-            catch (Exception ex)
-            {
-                Logger.Log($"Error processing WebAPI request: {ex.Message}", null);
-            }
-        }
-
-        private static void HandleRequest(HttpListenerContext context)
-        {
-            string responseText;
-            try
-            {
-                if (context.Request.Url.ToString().EndsWith("api/"))
-                    responseText = GetjsonAPI();
                 else
-                    responseText = GetStatisticHTML();
-
-                byte[] responseBuf = Encoding.UTF8.GetBytes(responseText);
-                context.Response.ContentLength64 = responseBuf.Length;
-                context.Response.OutputStream.Write(responseBuf, 0, responseBuf.Length);
-                context.Response.OutputStream.Close();
-            }
-            catch
-            {
-                try
                 {
-                    context.Response.StatusCode = 500;
-                    byte[] errorBuf = Encoding.UTF8.GetBytes("Internal Server Error");
-                    context.Response.ContentLength64 = errorBuf.Length;
-                    context.Response.OutputStream.Write(errorBuf, 0, errorBuf.Length);
-                    context.Response.OutputStream.Close();
+                    responseText = GetStatisticHTML();
                 }
-                catch { }
+
+                byte[] body = Encoding.UTF8.GetBytes(responseText);
+
+                writer.WriteLine("HTTP/1.1 200 OK");
+                writer.WriteLine($"Content-Type: {contentType}");
+                writer.WriteLine($"Content-Length: {body.Length}");
+                writer.WriteLine("Connection: close");
+                writer.WriteLine();
+                stream.Write(body, 0, body.Length);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"Error handling client: {ex.Message}", null);
+            }
+            finally
+            {
+                client.Close();
             }
         }
 
         private static int GetPortFromConfig()
         {
-            return 8888; // fixed port
+            return 8888;
         }
 
         public static string GetStatisticHTML()
@@ -166,7 +152,7 @@ namespace ClashRoyale.WebAPI
             }
         }
 
-        public static string GetjsonAPI()
+        public static string GetJsonAPI()
         {
             try
             {
@@ -189,10 +175,8 @@ namespace ClashRoyale.WebAPI
         {
             try
             {
-                using (StreamReader sr = new StreamReader("WebAPI/HTML/Statistics.html"))
-                {
-                    return sr.ReadToEnd();
-                }
+                using StreamReader sr = new StreamReader("WebAPI/HTML/Statistics.html");
+                return sr.ReadToEnd();
             }
             catch
             {

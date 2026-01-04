@@ -35,6 +35,7 @@ namespace ClashRoyale.Protocol
                 {10212, typeof(ChangeAvatarNameMessage)},
                 {10503, typeof(AskForFriendsInviteMessage)},
                 {10504, typeof(AskForFriendsListMessage)},
+                {10505, typeof(AskForFriendsAcceptMessage)},
                 //{10512, typeof(AskForPlayingGamecenterFriendsMessage)},
                 //{10513, typeof(AskForPlayingFacebookFriendsMessage)},
                 {10905, typeof(InboxOpenedMessage)},
@@ -90,7 +91,7 @@ namespace ClashRoyale.Protocol
                 //{16002, typeof(LogicDeviceLinkEnterCodeMessage)},
                 //{16003, typeof(LogicDeviceLinkConfirmYesMessage)},
                 {16103, typeof(AskForTournamentListMessage)},
-                {16113, typeof(SearchTournamentMessage)} // TODO
+                {16113, typeof(SearchTournamentMessage)}, // TODO
             };
         }
     }

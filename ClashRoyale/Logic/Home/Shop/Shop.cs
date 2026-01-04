@@ -17,25 +17,28 @@ namespace ClashRoyale.Logic.Home.Shop
     {
         [JsonIgnore] public Home Home { get; set; }
         [JsonIgnore] public bool CanRefresh => Home.ShopDay != (int) DateTime.UtcNow.DayOfWeek;
-        //[JsonIgnore] public bool IsEpicSunday => DateTime.UtcNow.DayOfWeek == DayOfWeek.Sunday;
+        [JsonIgnore] public bool IsEpicSunday => DateTime.UtcNow.DayOfWeek == DayOfWeek.Sunday;
 
         public void Refresh()
         {
             Home.ShopDay = (int) DateTime.UtcNow.DayOfWeek;
             Clear();
 
-            /*if (IsEpicSunday)
+            if (IsEpicSunday)
             {
-                Add(RandomSpell(Card.Rarity.Rare));
-                Add(RandomSpell(Card.Rarity.Epic));
-                Add(RandomSpell(Card.Rarity.Legendary));
-            }
-            else
-            {*/
                 Add(RandomSpell(Card.Rarity.Common));
                 Add(RandomSpell(Card.Rarity.Rare));
                 Add(RandomSpell(Card.Rarity.Epic));
-            //}
+                if (Home.Arena.CurrentArena >= 10)
+                {
+                    Add(RandomSpell(Card.Rarity.Legendary));
+                }
+            }
+            else
+            {
+                Add(RandomSpell(Card.Rarity.Common));
+                Add(RandomSpell(Card.Rarity.Rare));
+            }
         }
 
         public void Encode(IByteBuffer packet)
@@ -106,7 +109,17 @@ namespace ClashRoyale.Logic.Home.Shop
 
         public SpellShopItem RandomSpell(Card.Rarity rarity)
         {
-            var card = Cards.Random(rarity);
+            var chestArenas = Csv.Tables.Get(Csv.Files.Arenas).GetDatas()
+                .Cast<Arenas>()
+                .Where(a => a.Arena <= Home.Arena.CurrentArena)
+                .Select(a => a.ChestArena)
+                .ToList();
+
+            var card = Cards.RandomByArena(rarity, chestArenas);
+            if (card == null)
+            {
+                card = Cards.Random(rarity);
+            }
 
             return new SpellShopItem
             {

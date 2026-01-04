@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Text.RegularExpressions;
+using System.Linq;
 using ClashRoyale.Logic;
 using ClashRoyale.Protocol.Commands.Server;
 using ClashRoyale.Protocol.Messages.Server;
@@ -17,7 +17,6 @@ namespace ClashRoyale.Protocol.Messages.Client.Home
         }
 
         public string Name { get; set; }
-
         private static readonly string[] bannedWords;
 
         static ChangeAvatarNameMessage()
@@ -42,23 +41,11 @@ namespace ClashRoyale.Protocol.Messages.Client.Home
             }
         }
 
-        // Filter
-        private string FilterMessage(string message)
+        // Check if name contains banned words
+        private bool ContainsBannedWords(string message)
         {
-            if (string.IsNullOrEmpty(message))
-                return message;
-
-            foreach (var word in bannedWords)
-            {
-                var replacement = new string('*', word.Length);
-                message = Regex.Replace(
-                    message,
-                    Regex.Escape(word),
-                    replacement,
-                    RegexOptions.IgnoreCase
-                );
-            }
-            return message;
+            if (string.IsNullOrEmpty(message)) return false;
+            return bannedWords.Any(word => message.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0);
         }
 
         public override void Decode()
@@ -70,23 +57,37 @@ namespace ClashRoyale.Protocol.Messages.Client.Home
         {
             if (string.IsNullOrEmpty(Name)) return;
             if (Name.Length < 2 || Name.Length > 15) return;
+            if (Device?.Player == null) return;
 
-            var filteredName = FilterMessage(Name);
+            // Block inappropriate names
+            if (ContainsBannedWords(Name))
+            {
+                await new ServerErrorMessage(Device)
+                { 
+                    Message = "Invalid name! Please try another one." 
+                }.SendAsync();
+                return; // Do not change the name
+            }
 
             var home = Device.Player.Home;
+            if (home == null) return;
             if (home.NameSet >= 2) return;
 
-            home.Name = filteredName;
+            home.Name = Name;
 
-            var info = Device.Player.Home.AllianceInfo;
-
-            if (info.HasAlliance)
+            var info = home.AllianceInfo;
+            if (info != null && info.HasAlliance)
             {
                 var alliance = await Resources.Alliances.GetAllianceAsync(info.Id);
-
-                alliance.GetMember(home.Id).Name = filteredName;
-
-                alliance.Save();
+                if (alliance != null)
+                {
+                    var member = alliance.GetMember(home.Id);
+                    if (member != null)
+                    {
+                        member.Name = Name;
+                        alliance.Save();
+                    }
+                }
             }
 
             await new AvailableServerCommand(Device)
@@ -98,7 +99,6 @@ namespace ClashRoyale.Protocol.Messages.Client.Home
             }.SendAsync();
 
             home.NameSet++;
-
             Device.Player.Save();
         }
     }

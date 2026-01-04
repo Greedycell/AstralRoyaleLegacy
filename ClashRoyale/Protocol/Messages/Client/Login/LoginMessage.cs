@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Globalization;
+using System.Collections.Generic;
 using ClashRoyale.Logic;
 using ClashRoyale.Logic.Sessions;
 using ClashRoyale.Protocol.Messages.Server;
@@ -14,7 +15,7 @@ namespace ClashRoyale.Protocol.Messages.Client.Login
 {
     public class LoginMessage : PiranhaMessage
     {
-        private const string SERVER_VERSION_NUMBER = "3.0";
+        private const string SERVER_VERSION_NUMBER = "3.377.0";
 
         public LoginMessage(Device device, IByteBuffer buffer) : base(device, buffer)
         {
@@ -63,7 +64,15 @@ namespace ClashRoyale.Protocol.Messages.Client.Login
             Reader.ReadScString();
 
             AndroidId = Reader.ReadScString();
-            PreferredDeviceLanguage = Reader.ReadScString().Substring(3, 2);
+
+            try
+            {
+                PreferredDeviceLanguage = Reader.ReadScString().Substring(3, 2);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("PreferredDeviceLanguage failed.");
+            }
         }
 
         public override async void Process()
@@ -84,33 +93,106 @@ namespace ClashRoyale.Protocol.Messages.Client.Login
 
             var player = await Resources.Players.Login(UserId, UserToken);
 
+            try
+            {
+                if (player.Home.acc_switch != 0)
+                {     
+                        if (player.Home == null)
+                        {
+                            // Invalid player data check. Crash prevention
+                            await new LoginFailedMessage(Device)
+                            {
+                                ErrorCode = 1,
+                                Reason = "Invalid player data."
+                            }.SendAsync();
+                            return;
+                        }
+
+                        Device.Player = player;
+                        player.Device = Device;
+
+                        Console.WriteLine($"[LOGIN] Loaded player: {player.Home.Id}, Name: {player.Home.Name}");
+                        Console.WriteLine($"[LOGIN] acc_switch: {player.Home.acc_switch}, acc_switchtoken: {player.Home.acc_switchtoken}");
+
+                        HashSet<long> visited = new HashSet<long>();
+                        visited.Add(player.Home.Id);
+
+                        var switchId = player.Home.acc_switch;
+                        var switchToken = player.Home.acc_switchtoken;
+
+                    while (player != null && player.Home != null && player.Home.acc_switch != 0)
+                    {
+                        // Skip if token is invalid
+                        if (string.IsNullOrWhiteSpace(switchToken))
+                        {
+                            Console.WriteLine($"Invalid switch token for {switchId}, clearing.");
+                            player.Home.acc_switch = 0;
+                            player.Home.acc_switchtoken = null;
+                            player.Save();
+                            break;
+                        }
+
+                        if (visited.Contains(switchId) && switchId != UserId)
+                        {
+                            Console.WriteLine($"Loop detected at {switchId}, breaking chain.");
+                            break;
+                        }
+
+                        Console.WriteLine($"Detected switch from {player.Home.Id} to {switchId}");
+
+                        if (switchId == player.Home.Id)
+                        {
+                            Console.WriteLine("Detected self-switch; aborting to prevent loop.");
+                            player.Home.acc_switch = 0;
+                            player.Home.acc_switchtoken = null;
+                            player.Save();
+                            break;
+                        }
+
+                        var switchedPlayer = await Resources.Players.Login(switchId, switchToken);
+
+                        if (switchedPlayer != null)
+                        {
+                            if (switchedPlayer.Home == null)
+                            {
+                                Console.WriteLine($"Failed to switch to {switchId}; invalid player data.");
+                                break;
+                            }
+
+                            Console.WriteLine($"Successfully switched to player: {switchedPlayer.Home.Id}, Name: {switchedPlayer.Home.Name}");
+                            
+                            player = switchedPlayer;
+                            player.Device = Device;
+                            Device.Player = player;
+                            
+                            player.Home.acc_original_login_id = (int)UserId;
+                            
+                            visited.Add(player.Home.Id);
+                            
+                            //player.Home.acc_switch = 0;
+                            //player.Home.acc_switchtoken = null;
+                            player.Save();
+                            
+                            Console.WriteLine($"Now logged in as: {player.Home.Id}");
+                            continue;
+                        }
+                    }
+                }
+                else
+                {
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred with switching accounts: {ex.Message}");
+            }
+
             if (Resources.Configuration.BannedIds.Contains(UserId))
             {
                 await new LoginFailedMessage(Device)
                 {
                     ErrorCode = 11
                 }.SendAsync();
-                return;
-            }
-
-            bool missingDeviceModel = string.IsNullOrWhiteSpace(DeviceModel);
-            bool missingOsVersion   = string.IsNullOrWhiteSpace(OsVersion);
-            bool missingPlayer      = (player == null);
-
-            if (missingDeviceModel && missingOsVersion && missingPlayer)
-            {
-                if (Device != null)
-                {
-                    try
-                    {
-                        Device?.Disconnect();
-                        Logger.Log("i am loginmessage.cs i disconnect the ddos.", null);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Log("ddos protection failed bruh.", null);
-                    }
-                }
                 return;
             }
             
@@ -127,13 +209,15 @@ namespace ClashRoyale.Protocol.Messages.Client.Login
 
                 var session = Device.Session;
                 session.Ip = ip;
-                session.GameVersion = $"{ClientMajorVersion}.{ClientMinorVersion}";
+                session.GameVersion = $"{ClientMajorVersion}.{ClientBuild}.{ClientMinorVersion}";
                 session.Location = await Location.GetByIpAsync(ip);
                 session.DeviceCode = DeviceModel;
                 session.SessionId = Guid.NewGuid().ToString();
                 session.StartDate = session.SessionStart.ToString(CultureInfo.InvariantCulture);
 
                 player.Home.TotalSessions++;
+
+                Console.WriteLine($"[Client] {Device.Player.Home.Name} (ID: {Device.Player.Home.Id}, Trophies: {(long) Device.Player.Home.Arena.Trophies}, Arena: {Device.Player.Home.Arena.CurrentArena}) has joined the server! (Client: {session.GameVersion}, IP: {session.Ip})");
 
                 if (Device.Session.GameVersion != SERVER_VERSION_NUMBER)
                 {
@@ -181,124 +265,127 @@ namespace ClashRoyale.Protocol.Messages.Client.Login
 
                 alliance.UpdateOnlineCount();
 
-                var i = (long)Device.Player.Home.Arena.Trophies;
-                if (i < 400)
+                try
                 {
-                    Device.Player.Home.Arena.CurrentArena = 1;
-                }
-                else
-                {
-                    if (i >= 400 && i < 800)
+                    var i = (long)Device.Player.Home.Arena.Trophies;
+                    if (i < 400)
                     {
-                        Device.Player.Home.Arena.CurrentArena = 2;
+                        Device.Player.Home.Arena.CurrentArena = 1;
                     }
                     else
                     {
-                        if (i >= 800 && i < 1100)
+                        if (i >= 400 && i < 800)
                         {
-                            Device.Player.Home.Arena.CurrentArena = 3;
+                            Device.Player.Home.Arena.CurrentArena = 2;
                         }
                         else
                         {
-                            if (i >= 1100 && i < 1400)
+                            if (i >= 800 && i < 1100)
                             {
-                                Device.Player.Home.Arena.CurrentArena = 4;
+                                Device.Player.Home.Arena.CurrentArena = 3;
                             }
                             else
                             {
-                                if (i >= 1400 && i < 1700)
+                                if (i >= 1100 && i < 1400)
                                 {
-                                    Device.Player.Home.Arena.CurrentArena = 5;
+                                    Device.Player.Home.Arena.CurrentArena = 4;
                                 }
                                 else
                                 {
-                                    if (i >= 1700 && i < 2000)
+                                    if (i >= 1400 && i < 1700)
                                     {
-                                        Device.Player.Home.Arena.CurrentArena = 6;
+                                        Device.Player.Home.Arena.CurrentArena = 5;
                                     }
                                     else
                                     {
-                                        if (i >= 2000 && i < 2300)
+                                        if (i >= 1700 && i < 2000)
                                         {
-                                            Device.Player.Home.Arena.CurrentArena = 7;
+                                            Device.Player.Home.Arena.CurrentArena = 6;
                                         }
                                         else
                                         {
-                                            if (i >= 2300 && i < 2600)
+                                            if (i >= 2000 && i < 2300)
                                             {
-                                                Device.Player.Home.Arena.CurrentArena = 8;
+                                                Device.Player.Home.Arena.CurrentArena = 7;
                                             }
                                             else
                                             {
-                                                if (i >= 2600 && i < 3000)
+                                                if (i >= 2300 && i < 2600)
                                                 {
-                                                    Device.Player.Home.Arena.CurrentArena = 9;
+                                                    Device.Player.Home.Arena.CurrentArena = 8;
                                                 }
                                                 else
                                                 {
-                                                    if (i >= 3000 && i < 3800)
+                                                    if (i >= 2600 && i < 3000)
                                                     {
-                                                        Device.Player.Home.Arena.CurrentArena = 10;
+                                                        Device.Player.Home.Arena.CurrentArena = 9;
                                                     }
                                                     else
                                                     {
-                                                        if (i >= 3800 && i < 4000)
+                                                        if (i >= 3000 && i < 3800)
                                                         {
-                                                            Device.Player.Home.Arena.CurrentArena = 11;
+                                                            Device.Player.Home.Arena.CurrentArena = 10;
                                                         }
                                                         else
                                                         {
-                                                            if (i >= 4000 && i < 4300)
+                                                            if (i >= 3800 && i < 4000)
                                                             {
-                                                                Device.Player.Home.Arena.CurrentArena = 12;
+                                                                Device.Player.Home.Arena.CurrentArena = 11;
                                                             }
                                                             else
                                                             {
-                                                                if (i >= 4300 && i < 4600)
+                                                                if (i >= 4000 && i < 4300)
                                                                 {
-                                                                    Device.Player.Home.Arena.CurrentArena = 13;
+                                                                    Device.Player.Home.Arena.CurrentArena = 12;
                                                                 }
                                                                 else
                                                                 {
-                                                                    if (i >= 4600 && i < 4900)
+                                                                    if (i >= 4300 && i < 4600)
                                                                     {
-                                                                        Device.Player.Home.Arena.CurrentArena = 14;
+                                                                        Device.Player.Home.Arena.CurrentArena = 13;
                                                                     }
                                                                     else
                                                                     {
-                                                                        if (i >= 4900 && i < 5200)
+                                                                        if (i >= 4600 && i < 4900)
                                                                         {
-                                                                            Device.Player.Home.Arena.CurrentArena = 15;
+                                                                            Device.Player.Home.Arena.CurrentArena = 14;
                                                                         }
                                                                         else
                                                                         {
-                                                                            if (i >= 5200 && i < 5500)
+                                                                            if (i >= 4900 && i < 5200)
                                                                             {
-                                                                                Device.Player.Home.Arena.CurrentArena = 16;
+                                                                                Device.Player.Home.Arena.CurrentArena = 15;
                                                                             }
                                                                             else
                                                                             {
-                                                                                if (i >= 5500 && i < 5800)
+                                                                                if (i >= 5200 && i < 5500)
                                                                                 {
-                                                                                    Device.Player.Home.Arena.CurrentArena = 17;
+                                                                                    Device.Player.Home.Arena.CurrentArena = 16;
                                                                                 }
                                                                                 else
                                                                                 {
-                                                                                    if (i >= 5800 && i < 6100)
+                                                                                    if (i >= 5500 && i < 5800)
                                                                                     {
-                                                                                        Device.Player.Home.Arena.CurrentArena = 18;
+                                                                                        Device.Player.Home.Arena.CurrentArena = 17;
                                                                                     }
                                                                                     else
                                                                                     {
-                                                                                        if (i >= 6100 && i < 6400)
+                                                                                        if (i >= 5800 && i < 6100)
                                                                                         {
-                                                                                            Device.Player.Home.Arena.CurrentArena = 19;
+                                                                                            Device.Player.Home.Arena.CurrentArena = 18;
                                                                                         }
                                                                                         else
                                                                                         {
-                                                                                            if (i >= 6400)
+                                                                                            if (i >= 6100 && i < 6400)
                                                                                             {
-                                                                                                Device.Player.Home.Arena.CurrentArena = 20;
+                                                                                                Device.Player.Home.Arena.CurrentArena = 19;
+                                                                                            }
+                                                                                            else
+                                                                                            {
+                                                                                                if (i >= 6400)
+                                                                                                {
+                                                                                                    Device.Player.Home.Arena.CurrentArena = 20;
+                                                                                                }
                                                                                             }
                                                                                         }
                                                                                     }
@@ -319,6 +406,10 @@ namespace ClashRoyale.Protocol.Messages.Client.Login
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"An error occurred: {ex.Message}");
+                }
 
                 // Automatic Alliance Search
                 var buffer = Unpooled.Buffer();
@@ -337,11 +428,11 @@ namespace ClashRoyale.Protocol.Messages.Client.Login
                     }.SendAsync();
                     return;
                 }
-                if (!Resources.Configuration.Maintenance)
+                else
                 {
                     await new LoginFailedMessage(Device)
                     {
-                    Reason = "Account not found. Please clear app data."
+                        Reason = "Account not found. Please clear app data."
                     }.SendAsync();
                     return;
                 }

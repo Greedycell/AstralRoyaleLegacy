@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using ClashRoyale.Logic;
+using ClashRoyale;
 using ClashRoyale.Protocol.Messages.Server;
 using ClashRoyale.Protocol.Commands.Client;
 using ClashRoyale.Utilities.Netty;
@@ -22,6 +23,7 @@ namespace ClashRoyale.Protocol.Messages.Server
                 EstimatedDuration = 0 // seconds (300 = 5 min)
             }.SendAsync();
             await Task.Delay(500);
+            Resources.TournamentBattles.Cancel(Device.Player);
             await new CancelMatchmakeDoneMessage(Device).SendAsync();
         }
     }

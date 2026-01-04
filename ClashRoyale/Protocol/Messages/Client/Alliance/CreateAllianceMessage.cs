@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Text.RegularExpressions;
+using System.Linq;
 using System.Threading.Tasks;
 using ClashRoyale.Database;
 using ClashRoyale.Logic;
@@ -50,7 +50,14 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
             }
         }
 
-        // Filter
+        // Check contain bad word
+        private bool ContainsBannedWords(string message)
+        {
+            if (string.IsNullOrEmpty(message)) return false;
+            return bannedWords.Any(word => message.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
+        // Filter descroption
         private string FilterMessage(string message)
         {
             if (string.IsNullOrEmpty(message))
@@ -59,11 +66,11 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
             foreach (var word in bannedWords)
             {
                 var replacement = new string('*', word.Length);
-                message = Regex.Replace(
+                message = System.Text.RegularExpressions.Regex.Replace(
                     message,
-                    Regex.Escape(word),
+                    System.Text.RegularExpressions.Regex.Escape(word),
                     replacement,
-                    RegexOptions.IgnoreCase
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase
                 );
             }
             return message;
@@ -84,14 +91,31 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
         public override async void Process()
         {
             var player = Device.Player;
+            if (player == null) return;
+
+            // Block clan creation if name contains banned words
+            if (ContainsBannedWords(Name))
+            {
+                await new ServerErrorMessage(Device)
+                { 
+                    Message = "Invalid name! Please try another one." 
+                }.SendAsync();
+                return;
+            }
+
+            // Check if player is already in a clan
+            if (player.Home.AllianceInfo.HasAlliance)
+            {
+                return;
+            }
+
             if (!player.Home.UseGold(1000)) return;
 
             var alliance = await AllianceDb.CreateAsync();
-
             if (alliance != null)
             {
-                // Filter the name and description
-                alliance.Name = FilterMessage(Name);
+                // Kick u clan name, description is filtered
+                alliance.Name = Name;
                 alliance.Description = FilterMessage(Description);
 
                 alliance.Badge = Badge;
@@ -99,9 +123,7 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
                 alliance.RequiredScore = RequiredScore;
                 alliance.Region = Region;
 
-                alliance.Members.Add(
-                    new AllianceMember(player, Logic.Clan.Alliance.Role.Leader));
-
+                alliance.Members.Add(new AllianceMember(player, Logic.Clan.Alliance.Role.Leader));
                 player.Home.AllianceInfo = alliance.GetAllianceInfo(player.Home.Id);
 
                 alliance.Save();
@@ -112,7 +134,7 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
                     Command = new LogicJoinAllianceCommand(Device)
                     {
                         AllianceId = alliance.Id,
-                        AllianceName = alliance.Name,  // use filtered name here
+                        AllianceName = alliance.Name,
                         AllianceBadge = Badge
                     }
                 }.SendAsync();

@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Net;
+using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 using ClashRoyale;
 using ClashRoyale.Core;
 using ClashRoyale.Core.Cluster;
@@ -58,6 +61,11 @@ namespace ClashRoyale
 
             UpdateManager = new UpdateManager();
             await UpdateManager.Initialize();
+
+            if (Configuration.UseContentPatch)
+            {
+                _ = Task.Run(() => ContentServer.StartAsync());
+            }
 
             Cards.Initialize();
 

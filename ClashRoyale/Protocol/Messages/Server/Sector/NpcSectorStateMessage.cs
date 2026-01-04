@@ -3,6 +3,7 @@ using ClashRoyale.Extensions;
 using ClashRoyale.Files;
 using ClashRoyale.Files.CsvLogic;
 using ClashRoyale.Logic;
+using ClashRoyale.Logic.Home.Decks;
 using ClashRoyale.Utilities.Netty;
 using ClashRoyale.Utilities.Utils;
 
@@ -116,6 +117,12 @@ namespace ClashRoyale.Protocol.Messages.Server
 
             Writer.WriteVInt(0);
 
+            // Level logic
+            int playerLevel = Device.Player.Home.ExpLevel;
+            if (playerLevel < 1) playerLevel = 1;
+            if (playerLevel > 13) playerLevel = 13;
+            int towerLevelIndex = playerLevel - 1; // 1 = level 2, 13 = level 14, index 0..12
+
             Writer.WriteVInt(towers);
             Writer.WriteVInt(towers);
 
@@ -142,35 +149,35 @@ namespace ClashRoyale.Protocol.Messages.Server
             }
 
             // Player Right Princess Tower
-            Writer.WriteVInt(12);
+            Writer.WriteVInt(towerLevelIndex);
             Writer.WriteVInt(13);
             Writer.WriteVInt(14500); // X
             Writer.WriteVInt(25500); // Y
             Writer.WriteHex("00007F00C07C0002000000000000");
 
             // Enemy Left Princess Tower
-            Writer.WriteVInt(12);
+            Writer.WriteVInt(towerLevelIndex);
             Writer.WriteVInt(13);
             Writer.WriteVInt(3500); // X
             Writer.WriteVInt(6500); // Y
             Writer.WriteHex("00007F0080040001000000000000");
 
             // Player Left Princess Tower
-            Writer.WriteVInt(12);
+            Writer.WriteVInt(towerLevelIndex);
             Writer.WriteVInt(13);
             Writer.WriteVInt(3500); // X
             Writer.WriteVInt(25500); // Y
             Writer.WriteHex("00007F00C07C0001000000000000");
 
             // Enemy Right Princess Tower
-            Writer.WriteVInt(12);
+            Writer.WriteVInt(towerLevelIndex);
             Writer.WriteVInt(13);
             Writer.WriteVInt(14500); // X
             Writer.WriteVInt(6500); // Y
             Writer.WriteHex("00007F0080040002000000000000");
 
             // Enemy Crown Tower
-            Writer.WriteVInt(12);
+            Writer.WriteVInt(towerLevelIndex);
             Writer.WriteVInt(13);
             Writer.WriteVInt(9000); // X
             Writer.WriteVInt(3000); // Y
@@ -186,7 +193,7 @@ namespace ClashRoyale.Protocol.Messages.Server
             Writer.WriteHex("00007F7F7F7F7F7F7F7F00");
 
             // Player Crown Tower
-            Writer.WriteVInt(12);
+            Writer.WriteVInt(towerLevelIndex);
             Writer.WriteVInt(13);
             Writer.WriteVInt(9000); // X
             Writer.WriteVInt(29000); // Y
@@ -209,17 +216,20 @@ namespace ClashRoyale.Protocol.Messages.Server
                 Writer.WriteVInt(0);
 
             // LogicHitpointComponent
-            Writer.WriteVInt(3668); // Enemy 
+            int princessHp = ClashRoyale.Logic.Battle.LogicBattle.PrincessTowerHp[towerLevelIndex];
+            int kingHp = ClashRoyale.Logic.Battle.LogicBattle.KingTowerHp[towerLevelIndex];
+
+            Writer.WriteVInt(princessHp); // Enemy 
             Writer.WriteVInt(0);
-            Writer.WriteVInt(3668); // Player
+            Writer.WriteVInt(princessHp); // Player
             Writer.WriteVInt(0);
-            Writer.WriteVInt(3668); // Enemy
+            Writer.WriteVInt(princessHp); // Enemy
             Writer.WriteVInt(0);
-            Writer.WriteVInt(3668); // Player
+            Writer.WriteVInt(princessHp); // Player
             Writer.WriteVInt(0);
-            Writer.WriteVInt(5832); // Enemy
+            Writer.WriteVInt(kingHp); // Enemy
             Writer.WriteVInt(0);
-            Writer.WriteVInt(5832); // Player
+            Writer.WriteVInt(kingHp); // Player
             Writer.WriteVInt(0);
 
             // LogicCharacterBuffComponent
@@ -228,7 +238,11 @@ namespace ClashRoyale.Protocol.Messages.Server
 
             // Trainer
             Writer.WriteHex("FF01");
-            Device.Player.Home.Deck.EncodeAttack(Writer);
+
+            // Trainer deck
+            var allowedArenaNames = Device.Player.Home.Arena.GetChestArenaNames();
+            var trainerDeck = Deck.GenerateRandomDeckAtLevel(playerLevel, allowedArenaNames);
+            trainerDeck.EncodeAttack(Writer);
 
             Writer.WriteByte(0);
 

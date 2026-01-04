@@ -9,6 +9,7 @@ using ClashRoyale.Files.CsvLogic;
 using ClashRoyale.Protocol.Messages.Server;
 using ClashRoyale.Utilities.Models.Battle.Replay;
 using ClashRoyale.Utilities.Netty;
+using ClashRoyale.Logic.Home.Chests.Items;
 using DotNetty.Buffers;
 using SharpRaven.Data;
 
@@ -1143,36 +1144,61 @@ namespace ClashRoyale.Logic.Battle
                             var rnd = new Random();
                             var trophies = IsFriendly || Is2V2 ? 0 : rnd.Next(MinTrophies, MaxTrophy);
 
-                            if (!IsFriendly)
+                            // Normal battle
+                            if (!IsFriendly && !IsTournament && !Is2V2)
                             {
                                 player.Home.AddCrowns(3);
                                 player.Home.Arena.AddTrophies(trophies);
-                                player.Home.Arena.RemoveTrophies(trophies);
+
+                                await new BattleResultMessage(player.Device)
+                                {
+                                    BattleResultType = 1,
+                                    TrophyReward = trophies,
+                                    OpponentTrophyReward = -trophies,
+                                    OwnCrowns = 0,
+                                    OpponentCrowns = 0,
+                                }.SendAsync();
                             }
-                            else
+                            // Tournament battle
+                            else if (IsTournament)
                             {
                                 player.Home.AddCrowns(3);
+
+                                await new BattleResultMessage(player.Device)
+                                {
+                                    BattleResultType = 1,
+                                    OwnCrowns = 0,
+                                    OpponentCrowns = 0,
+                                }.SendAsync();
+                            }
+                            // Friendly battle
+                            else if (IsFriendly)
+                            {
+                                await new BattleResultMessage(player.Device)
+                                {
+                                    BattleResultType = 1,
+                                    OwnCrowns = 0,
+                                    OpponentCrowns = 0,
+                                }.SendAsync();
+                            }
+                            // 2v2 battle
+                            else if (Is2V2)
+                            {
+                                await new BattleResultMessage(player.Device)
+                                {
+                                    BattleResultType = 1,
+                                    OwnCrowns = 0,
+                                    OpponentCrowns = 0,
+                                }.SendAsync();
                             }
 
-                            await new BattleResultMessage(player.Device)
+                            // Chest Slot Award
+                            /*if (player.Home.PlayerChests.Count <= 4)
                             {
-                                BattleResultType = 1,
-                                OwnCrowns = 0, // Winner
-                                OpponentCrowns = 0, // Loser
-                                TrophyReward = trophies, // Winner
-                                OpponentTrophyReward = -trophies, // Loser
-                                //AwardedChest = null
-                            }.SendAsync();
-
-                            await new BattleResultMessage(player.Device)
-                            {
-                                BattleResultType = 2,
-                                OwnCrowns = 0, // Loser
-                                OpponentCrowns = 0, // Winner
-                                TrophyReward = -trophies, // Loser
-                                OpponentTrophyReward = trophies, // Winner
-                                //AwardedChest = null
-                            }.SendAsync();
+                                var newChest = new Chest();
+                                newChest.ChestId = 219;
+                                player.Home.PlayerChests.Add(newChest);
+                            }*/
 
                             // TODO: Profile Wins
                             player.Home.TotalWins += 1;
@@ -1248,24 +1274,61 @@ namespace ClashRoyale.Logic.Battle
             var rnd = new Random();
             var trophies = IsFriendly || Is2V2 ? 0 : rnd.Next(MinTrophies, MaxTrophy);
 
-            if (!IsFriendly)
+            // Normal battle
+            if (!IsFriendly && !IsTournament && !Is2V2)
             {
                 player.Home.AddCrowns(3);
                 player.Home.Arena.AddTrophies(trophies);
+
+                await new BattleResultMessage(player.Device)
+                {
+                    BattleResultType = 1,
+                    TrophyReward = trophies,
+                    OpponentTrophyReward = -trophies,
+                    OwnCrowns = 0,
+                    OpponentCrowns = 0,
+                }.SendAsync();
             }
-            else
+            // Tournament battle
+            else if (IsTournament)
             {
                 player.Home.AddCrowns(3);
-            }
 
-            await new BattleResultMessage(player.Device)
+                await new BattleResultMessage(player.Device)
+                {
+                    BattleResultType = 1,
+                    OwnCrowns = 0,
+                    OpponentCrowns = 0,
+                }.SendAsync();
+            }
+            // Friendly battle
+            else if (IsFriendly)
             {
-                BattleResultType = 1,
-                TrophyReward = trophies,
-                OpponentTrophyReward = -trophies,
-                OwnCrowns = 3,
-                OpponentCrowns = 3,
-            }.SendAsync();
+                await new BattleResultMessage(player.Device)
+                {
+                    BattleResultType = 1,
+                    OwnCrowns = 0,
+                    OpponentCrowns = 0,
+                }.SendAsync();
+            }
+            // 2v2 battle
+            else if (Is2V2)
+            {
+                await new BattleResultMessage(player.Device)
+                {
+                    BattleResultType = 1,
+                    OwnCrowns = 0,
+                    OpponentCrowns = 0,
+                }.SendAsync();
+            }            
+
+            // Chest Slot Award
+            /*if (player.Home.PlayerChests.Count <= 4)
+            {
+                var newChest = new Chest();
+                newChest.ChestId = 219;
+                player.Home.PlayerChests.Add(newChest);
+            }*/
 
             // TODO: Profile Wins
             player.Home.TotalWins += 1;

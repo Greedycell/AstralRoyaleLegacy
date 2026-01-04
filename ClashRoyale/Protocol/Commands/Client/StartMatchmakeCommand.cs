@@ -1,5 +1,7 @@
-﻿using ClashRoyale.Logic;
+﻿using ClashRoyale;
+using ClashRoyale.Logic;
 using ClashRoyale.Logic.Battle;
+using ClashRoyale.Core;
 using ClashRoyale.Protocol.Messages.Server;
 using ClashRoyale.Utilities.Netty;
 using DotNetty.Buffers;
@@ -55,23 +57,49 @@ namespace ClashRoyale.Protocol.Commands.Client
             else
             {
                 var enemy = Resources.Battles.Dequeue;
-                if (enemy != null)
+                // player can't attack an opponent from any arena
+                if (Resources.Configuration.CantAttackAnyArena)
                 {
-                    var battle = new LogicBattle(false, enemy.Home.Arena.CurrentArena + 1)
+                    if (enemy != null && enemy.Home.Arena.CurrentArena == Device.Player.Home.Arena.CurrentArena)
                     {
-                        Device.Player, enemy
-                    };
+                        var battle = new LogicBattle(false, enemy.Home.Arena.CurrentArena + 1)
+                        {
+                            Device.Player, enemy
+                        };
 
-                    Resources.Battles.Add(battle);
+                        Resources.Battles.Add(battle);
 
-                    Device.Player.Battle = battle;
-                    enemy.Battle = battle;
+                        Device.Player.Battle = battle;
+                        enemy.Battle = battle;
 
-                    battle.Start();
+                        battle.Start();
+                    }
+                    else
+                    {
+                        Resources.Battles.Enqueue(Device.Player);
+                    }
                 }
                 else
+                // player can attack an opponent from any arena
                 {
-                    Resources.Battles.Enqueue(Device.Player);
+                    if (enemy != null)
+                    {
+                        var battle = new LogicBattle(false, enemy.Home.Arena.CurrentArena + 1)
+                        {
+                            Device.Player, enemy
+                        };
+
+                        Resources.Battles.Add(battle);
+
+                        Device.Player.Battle = battle;
+                        enemy.Battle = battle;
+
+                        battle.Start();
+                    }
+                    else
+                    {
+                        Resources.Battles.Enqueue(Device.Player);
+                    }
                 }
             }
         }

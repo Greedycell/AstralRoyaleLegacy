@@ -1,4 +1,6 @@
-﻿using ClashRoyale.Logic;
+﻿using System;
+using System.Threading.Tasks;
+using ClashRoyale.Logic;
 using ClashRoyale.Protocol.Messages.Server;
 using DotNetty.Buffers;
 
@@ -14,6 +16,7 @@ namespace ClashRoyale.Protocol.Messages.Client.Sector
         public override async void Process()
         {
             if (Resources.Battles.Cancel(Device.Player))
+                await Task.Delay(700);
                 await new CancelMatchmakeDoneMessage(Device).SendAsync();
 
             if (Resources.DuoBattles.Cancel(Device.Player))

@@ -1,4 +1,5 @@
-﻿using ClashRoyale.Logic;
+﻿using System;
+using ClashRoyale.Logic;
 using ClashRoyale.Logic.Clan.StreamEntry.Entries;
 using ClashRoyale.Protocol.Commands.Server;
 using ClashRoyale.Protocol.Messages.Server;
@@ -27,6 +28,14 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
         public override async void Process()
         {
             var home = Device.Player.Home;
+
+            // Protection if your not Co-Leader or Leader
+            // Leader = 2, Co-Leader = 4
+            if (home.AllianceInfo.Role != 4 && home.AllianceInfo.Role != 2)
+            {
+                return;
+            }
+            
             var alliance = await Resources.Alliances.GetAllianceAsync(home.AllianceInfo.Id);
 
             var member = alliance?.GetMember(MemberId);
@@ -41,6 +50,7 @@ namespace ClashRoyale.Protocol.Messages.Client.Alliance
             var oldRole = member.Role;
             member.Role = NewRole;
             player.Home.AllianceInfo.Role = NewRole;
+            Console.WriteLine(NewRole);
 
             var entry = new AllianceEventStreamEntry
             {

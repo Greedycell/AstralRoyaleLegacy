@@ -56,7 +56,7 @@ namespace ClashRoyale.Protocol.Messages.Server
             Writer.WriteScString("<c4>AstralRoyale</c>"); // Title
             Writer.WriteScString("A RetroRoyale fork created by @astralsc on GitHub!"); // Description
             Writer.WriteScString("Visit Repository"); // Button
-            Writer.WriteScString("https://github.com/fdz6/AstralRoyale"); // URL
+            Writer.WriteScString("https://github.com/Greedycell/AstralRoyale"); // URL
 
             // Seperation between inbox messages
             Writer.WriteScString(""); // Unk

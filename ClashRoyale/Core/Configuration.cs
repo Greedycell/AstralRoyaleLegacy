@@ -41,7 +41,7 @@ namespace ClashRoyale.Core
         [JsonProperty("sentry_api")] public string SentryApiUrl = "";
 
         [JsonProperty("server_port")] public int ServerPort = 9339;
-        [JsonProperty("update_url")] public string UpdateUrl = "https://github.com/astralsc/AstralRoyale";
+        [JsonProperty("update_url")] public string UpdateUrl = "https://github.com/Greedycell/AstralRoyale";
         [JsonProperty("use_content_patch")] public bool UseContentPatch;
 
         [JsonProperty("MinTrophies")] public int MinTroph;
@@ -49,6 +49,8 @@ namespace ClashRoyale.Core
         [JsonProperty("DefaultGold")] public int DefGold;
         [JsonProperty("DefaultGems")] public int DefGems;
         [JsonProperty("DefaultLevel")] public int DefLevel;
+
+        [JsonProperty("cant_attack_any_arena")] public bool CantAttackAnyArena;
 
         [JsonProperty("use_udp")] public bool UseUdp;
 
@@ -126,6 +128,8 @@ namespace ClashRoyale.Core
                     Home.DefaultGems = DefGems;
                     Home.DefaultLevel = DefLevel;
                     Home.DefaultGold = DefGold;
+
+                    CantAttackAnyArena = config.CantAttackAnyArena;
 
                     UseUdp = config.UseUdp;
 
