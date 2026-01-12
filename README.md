@@ -48,9 +48,6 @@
 5. Chest Slots
 ```
 
-## Battles
-The server supports battles, for those a patched client is neccessary.
-
 [See the wiki for a tutorials](https://github.com/Greedycell/AstralRoyaleLegacy/wiki/)
 
 ## How to start
