@@ -48,6 +48,7 @@
 5. Chest Slots
 ```
 
+## Wiki
 [See the wiki for a tutorials](https://github.com/Greedycell/AstralRoyaleLegacy/wiki/)
 
 ## How to start
