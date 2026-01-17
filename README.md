@@ -1,5 +1,6 @@
 # <p align="center">AstralRoyale</p>
 # <p align="center">Clash Royale server for 1.9.0 - 1.9.3</p>
+# <p align="center">This repository is now discontinued, please wait for the new [AstralRoyale](https://github.com/Greedycell/AstralRoyaleLegacy) to release!</p>
 [![clash royale](https://img.shields.io/badge/Clash%20Royale-1.9-brightred.svg?style=flat")](https://github.com/Greedycell/AstralRoyaleLegacy/releases/tag/Clients)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
